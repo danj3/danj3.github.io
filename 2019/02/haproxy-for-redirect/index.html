@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>haproxy for redirect | A diary of problems</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="haproxy for redirect" />
+<meta name="author" content="Dan" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="(2024 update, deploy haproxy in a container instead.) The article is about using haproxy for http redirect of whole domains. There are many ways to do this, but the foregoing case provides some good operational knowledge about all the pieces and how they can be used. A later article will cover the Let&#39;s Encrypt portion, but the full build and configure will be here. These are the components: haproxy 1.8 (custom build) lua 5.3.5 (custom build) openssl (from os) pcre (from os) zlib (from os) CentOS 7 Building Since CentOS provides substantially outdated versions of haproxy and lua, we&#39;re going to download and build them. YUM Steps Assuming you&#39;re starting with a default install, this is how to start the process: yum install @&#39;development tools&#39; yum install openssl-devel yum install pcre-devel yum install zlib-devel yum install readline-devel Build LUA curl -R -O http://www.lua.org/ftp/lua-5.3.5.tar.gz tar zxf lua-5.3.5.tar.gz cd lua-5.3.5 make linux test Build haproxy wget https://www.haproxy.org/download/1.8/src/haproxy-1.8.19.tar.gz tar -tzf haproxy-1.8.19.tar.gz cd haproxy-1.8.19 make TARGET=linux2628 USE_PCRE=1 USE_OPENSSL=1 USE_ZLIB=1 LUA_LIB=~/lua-5.3.5/src LUA_INC=~/lua-5.3.5/src USE_LUA=1 USE_SYSTEMD=1 The above assumes you&#39;re building in the home directory and that&#39;s where lua can be found. If that&#39;s not the case, adjust the LUA_LIB and LUA_INC variables. If you&#39;re on a linux you&#39;re probably using systemd, so let&#39;s get that: cd contrib/systemd make PREFIX=&quot;&quot; Install From the root of the haproxy build: sudo cp haproxy /sbin/haproxy sudo mkdir /etc/haproxy sudo cp contrib/systemd/haproxy.service /etc/systemd/system/ Configuration Below is the entire haproxy configuration. It should end up in the file /etc/haproxy/haproxy.cfg . We&#39;ll take it apart following. Note that where possible, settings are links to the haproxy documentation for details. global # From default package cfg log 127.0.0.1 local2 chroot /var/lib/haproxy pidfile /var/run/haproxy.pid maxconn 4000 user haproxy group haproxy # turn on stats unix socket stats socket /var/lib/haproxy/stats" />
+<meta property="og:description" content="(2024 update, deploy haproxy in a container instead.) The article is about using haproxy for http redirect of whole domains. There are many ways to do this, but the foregoing case provides some good operational knowledge about all the pieces and how they can be used. A later article will cover the Let&#39;s Encrypt portion, but the full build and configure will be here. These are the components: haproxy 1.8 (custom build) lua 5.3.5 (custom build) openssl (from os) pcre (from os) zlib (from os) CentOS 7 Building Since CentOS provides substantially outdated versions of haproxy and lua, we&#39;re going to download and build them. YUM Steps Assuming you&#39;re starting with a default install, this is how to start the process: yum install @&#39;development tools&#39; yum install openssl-devel yum install pcre-devel yum install zlib-devel yum install readline-devel Build LUA curl -R -O http://www.lua.org/ftp/lua-5.3.5.tar.gz tar zxf lua-5.3.5.tar.gz cd lua-5.3.5 make linux test Build haproxy wget https://www.haproxy.org/download/1.8/src/haproxy-1.8.19.tar.gz tar -tzf haproxy-1.8.19.tar.gz cd haproxy-1.8.19 make TARGET=linux2628 USE_PCRE=1 USE_OPENSSL=1 USE_ZLIB=1 LUA_LIB=~/lua-5.3.5/src LUA_INC=~/lua-5.3.5/src USE_LUA=1 USE_SYSTEMD=1 The above assumes you&#39;re building in the home directory and that&#39;s where lua can be found. If that&#39;s not the case, adjust the LUA_LIB and LUA_INC variables. If you&#39;re on a linux you&#39;re probably using systemd, so let&#39;s get that: cd contrib/systemd make PREFIX=&quot;&quot; Install From the root of the haproxy build: sudo cp haproxy /sbin/haproxy sudo mkdir /etc/haproxy sudo cp contrib/systemd/haproxy.service /etc/systemd/system/ Configuration Below is the entire haproxy configuration. It should end up in the file /etc/haproxy/haproxy.cfg . We&#39;ll take it apart following. Note that where possible, settings are links to the haproxy documentation for details. global # From default package cfg log 127.0.0.1 local2 chroot /var/lib/haproxy pidfile /var/run/haproxy.pid maxconn 4000 user haproxy group haproxy # turn on stats unix socket stats socket /var/lib/haproxy/stats" />
+<link rel="canonical" href="http://localhost:4005/2019/02/haproxy-for-redirect/" />
+<meta property="og:url" content="http://localhost:4005/2019/02/haproxy-for-redirect/" />
+<meta property="og:site_name" content="A diary of problems" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-02-26T17:44:59-05:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="haproxy for redirect" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dan"},"dateModified":"2019-02-26T17:44:59-05:00","datePublished":"2019-02-26T17:44:59-05:00","description":"(2024 update, deploy haproxy in a container instead.) The article is about using haproxy for http redirect of whole domains. There are many ways to do this, but the foregoing case provides some good operational knowledge about all the pieces and how they can be used. A later article will cover the Let&#39;s Encrypt portion, but the full build and configure will be here. These are the components: haproxy 1.8 (custom build) lua 5.3.5 (custom build) openssl (from os) pcre (from os) zlib (from os) CentOS 7 Building Since CentOS provides substantially outdated versions of haproxy and lua, we&#39;re going to download and build them. YUM Steps Assuming you&#39;re starting with a default install, this is how to start the process: yum install @&#39;development tools&#39; yum install openssl-devel yum install pcre-devel yum install zlib-devel yum install readline-devel Build LUA curl -R -O http://www.lua.org/ftp/lua-5.3.5.tar.gz tar zxf lua-5.3.5.tar.gz cd lua-5.3.5 make linux test Build haproxy wget https://www.haproxy.org/download/1.8/src/haproxy-1.8.19.tar.gz tar -tzf haproxy-1.8.19.tar.gz cd haproxy-1.8.19 make TARGET=linux2628 USE_PCRE=1 USE_OPENSSL=1 USE_ZLIB=1 LUA_LIB=~/lua-5.3.5/src LUA_INC=~/lua-5.3.5/src USE_LUA=1 USE_SYSTEMD=1 The above assumes you&#39;re building in the home directory and that&#39;s where lua can be found. If that&#39;s not the case, adjust the LUA_LIB and LUA_INC variables. If you&#39;re on a linux you&#39;re probably using systemd, so let&#39;s get that: cd contrib/systemd make PREFIX=&quot;&quot; Install From the root of the haproxy build: sudo cp haproxy /sbin/haproxy sudo mkdir /etc/haproxy sudo cp contrib/systemd/haproxy.service /etc/systemd/system/ Configuration Below is the entire haproxy configuration. It should end up in the file /etc/haproxy/haproxy.cfg . We&#39;ll take it apart following. Note that where possible, settings are links to the haproxy documentation for details. global # From default package cfg log 127.0.0.1 local2 chroot /var/lib/haproxy pidfile /var/run/haproxy.pid maxconn 4000 user haproxy group haproxy # turn on stats unix socket stats socket /var/lib/haproxy/stats","headline":"haproxy for redirect","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4005/2019/02/haproxy-for-redirect/"},"url":"http://localhost:4005/2019/02/haproxy-for-redirect/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4005/feed.xml" title="A diary of problems" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">A diary of problems</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/privacy-policy/">Privacy Policy</a><a class="page-link" href="/company/">Triskelion, LLC</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">haproxy for redirect</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2019-02-26T17:44:59-05:00" itemprop="datePublished">Feb 26, 2019
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Dan</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>(2024 update, deploy haproxy in a container instead.)</p>
+<p><!-- wp:paragraph --></p>
+<p>The article is about using <a href="http://www.haproxy.org">haproxy </a>for http redirect of whole domains. There are many ways to do this, but the foregoing case provides some good operational knowledge about all the pieces and how they can be used. A later article will cover the Let's Encrypt portion, but the full build and configure will be here.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:more --><br />
+<!--more--><br />
+<!-- /wp:more --></p>
+<p><!-- wp:paragraph --></p>
+<p>These are the components:<br><br></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul>
+<li><a href="https://www.haproxy.org/#down">haproxy 1.8 </a>(custom build)
+<ul>
+<li><a href="http://www.lua.org/download.html">lua 5.3.5</a> (custom build)</li>
+<li>openssl (from os)</li>
+<li>pcre (from os)</li>
+<li>zlib (from os)</li>
+</ul>
+</li>
+<li>CentOS 7</li>
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:heading --></p>
+<h2>Building</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Since CentOS provides substantially outdated versions of haproxy and lua, we're going to download and build them. </p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3>YUM Steps</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Assuming you're starting with a default install, this is how to start the process:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>yum install @'development tools'
+yum install openssl-devel
+yum install pcre-devel
+yum install zlib-devel
+yum install readline-devel</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3>Build LUA</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>curl -R -O http://www.lua.org/ftp/lua-5.3.5.tar.gz
+tar zxf lua-5.3.5.tar.gz
+cd lua-5.3.5
+make linux test</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3>Build haproxy<br></h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>wget https://www.haproxy.org/download/1.8/src/haproxy-1.8.19.tar.gz
+tar -tzf haproxy-1.8.19.tar.gz
+cd haproxy-1.8.19
+make TARGET=linux2628 USE_PCRE=1 USE_OPENSSL=1 USE_ZLIB=1 LUA_LIB=~/lua-5.3.5/src LUA_INC=~/lua-5.3.5/src USE_LUA=1 USE_SYSTEMD=1</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>The above assumes you're building in the home directory and that's where lua can be found. If that's not the case, adjust the <code>LUA_LIB</code> and <code>LUA_INC</code> variables.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you're on a linux you're probably using systemd, so let's get that:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>cd contrib/systemd
+make PREFIX=""</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3>Install</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>From the root of the haproxy build:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>sudo cp haproxy /sbin/haproxy
+sudo mkdir /etc/haproxy
+sudo cp contrib/systemd/haproxy.service /etc/systemd/system/</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading --></p>
+<h2>Configuration</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Below is the entire haproxy configuration. It should end up in the file <code>/etc/haproxy/haproxy.cfg</code> . We'll take it apart following. Note that where possible, settings are links to the haproxy documentation for details.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:syntaxhighlighter/code {"language":"bash"} --></p>
+<pre class="wp-block-syntaxhighlighter-code">global
+  # From default package cfg
+  log         127.0.0.1 local2
+  chroot      /var/lib/haproxy
+  pidfile     /var/run/haproxy.pid
+  maxconn     4000
+  user        haproxy
+  group       haproxy
+  # turn on stats unix socket
+  stats socket /var/lib/haproxy/stats
+
+  tune.ssl.default-dh-param 2048
+  server-state-file /tmp/haproxy_server_state
+# 
+#  lua-load /etc/haproxy/luascript_acme-webroot.lua
+
+defaults
+  mode                    http
+  log                     global
+  option                  httplog
+  option                  dontlognull
+  option http-server-close
+  option forwardfor       except 127.0.0.0/8
+  option                  redispatch
+  retries                 3
+  timeout http-request    10s
+  timeout queue           1m
+  timeout connect         10s
+  timeout client          1m
+  timeout server          1m
+  timeout http-keep-alive 10s
+  timeout check           10s
+  maxconn                 3000
+
+listen stats
+   bind 127.0.0.1:2200 name localstats
+   stats enable
+   stats admin if LOCALHOST
+   stats show-legends
+   timeout client 5000
+   timeout connect 5000
+   timeout server 5000
+
+frontend fe-http
+  bind proxy-host.my.domain:80 name proxy-host.my.domain:80
+  acl acme    var(txn.txnpath) -m beg -i /.well-known/acme-challenge
+  acl trivial-domain var(txn.txnhost) -m end -i trivial-domain.com
+  http-request set-var(txn.txnhost) hdr(host)
+  http-request set-var(txn.txnpath) path
+#  http-request use-service lua.acme-http01 if acme
+  http-request redirect prefix https://www.real-domain.com if trivial-domain
+
+frontend fe-https
+  bind proxy-host.my.domain:443 name proxy-host.my.domain:443 ssl crt-list /etc/haproxy/ssl/fe-https.crt_list
+  acl trivial-domain var(txn.txnhost) -m end -i trivial-domain.com
+  http-request set-var(txn.txnhost) hdr(host)
+  http-request redirect prefix https://www.real-domain.com if trivial-domain</pre>
+<p><!-- /wp:syntaxhighlighter/code --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3> Global</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The <code>log 127.0.0.1 local2</code> will require a change to <code>/etc/rsyslog.conf</code>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code># Provides UDP syslog reception
+$ModLoad imudp
+$UDPServerRun 514</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>These lines are in the RPM distributed file, but are commented out. I was not able to find a setting to limit rsyslogd to binding only to localhost, so this opens UDP port 514 to off-host traffic.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Create the file <code>/etc/rsyslog.d/haproxy.conf</code>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>local2.*	/var/log/haproxy</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>I think you can combine the imudp lines into the this file and just not comment them out of the <code>/etc/rsyslog.conf</code>, but this seems bad form since it really is a global rsyslog change.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The <code>lua-load</code> pertains to handling acme-challenge requests for SSL, and will be covered in a later article, so it is commented out here.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3>Defaults</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>These are settings apply to all following sections unless they are overridden. For our purposes they don't have much effect except the <code><a href="http://cbonte.github.io/haproxy-dconv/1.8/configuration.html#mode">mode</a></code> is defaulted to <code>http</code> and the <code><a href="http://cbonte.github.io/haproxy-dconv/1.8/configuration.html#option%20httplog">option</a></code><a href="http://cbonte.github.io/haproxy-dconv/1.8/configuration.html#option%20httplog"> </a>being <code>httplog</code>. </p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3>Stats</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is not strictly necessary since in this use case haproxy is not handling actual traffic. But it is a great overview of what haproxy is doing and if you use haproxy for anything else you will want it. This section results in a navigable url of http://127.0.0.1:220/haproxy?stats</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2>frontend fe-http</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Here we deal with two situations, redirection and acme certificates, the latter of which we will deal with below. The <strong><a href="http://cbonte.github.io/haproxy-dconv/1.8/configuration.html#bind">bind</a></strong> is the IP and port haproxy should listen on for connections. The <code>name</code> parameter is what will be used on the stats page.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong><a href="http://cbonte.github.io/haproxy-dconv/1.8/configuration.html#7">acl</a></strong> is one of the largest topics in haproxy, it defines a piece of logic. Let's examine these specific cases</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>acl acme    var(txn.txnpath) -m beg -i /.well-known/acme-challenge</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Read this as: declare a name <strong>acme</strong> whose value is the comparison of the variable <strong>txn.txnpath</strong> as a path where the beginning is a case insensitive match on <code>/.well-known/acme-challenge</code>. The variable txn.txnpath doesn't exist in haproxy, it is created when the request is processed by the line that follows:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>http-request set-var(txn.txnpath) path</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This sets the variable to the path from the <a href="http://cbonte.github.io/haproxy-dconv/1.8/configuration.html#http-request%20(Alphabetically%20sorted%20keywords%20reference)">request</a>. To be honest, this threw me off the first time I saw it due to the ordering.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>This acl is then used as a condition in the ongoing http request handler as such:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>http-request use-service lua.acme-http01 if acme</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Which in this case, if the acme variable is hold a true (that the request path starts with /.well-known/acme-challenge) then the lua service lua.acme-http01 is called for handling the request. These lines are commented out, but see the later article about Let's Encrypt, then these lines will be turned on and used.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":4} --></p>
+<h4>Redirection</h4>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The lines</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>acl trivial-domain var(txn.txnhost) -m end -i trivial-domain.com
+...
+http-request set-var(txn.txnhost) hdr(host)
+...
+http-request redirect prefix https://www.real-domain.com if trivial-domain</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>are a very similar pattern. txn.txnhost is being set during the http-request, specifically the hostname provided in the <code>Host:</code> header. The acl will trivial-domain be true if txn.txnhost ends with trivial-domain.com. Then, if trivial-domain is true, a <a href="http://cbonte.github.io/haproxy-dconv/1.8/configuration.html#redirect%20prefix">prefix </a>redirection will be sent to the client. A prefix will rebuild the URL with the new prefix and the requested path. The action is if a request arrives for http://anything-at.trivial-domain.com/buckets/of/fish a redirect will be returned to https://www.real-domain.com/buckets/of/fish</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3>frontend fe-https</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is mostly the same except for <code>bind</code> which includes <code>ssl crt-list /etc/haproxy/ssl/fe-https.crt_list</code> and this is to provide haproxy with SSL certificates since this is an https frontend. The <a href="http://cbonte.github.io/haproxy-dconv/1.8/configuration.html#crt-list">crt_list</a> is a text file that lists, each on a line, files that contain certificate and keys concatenated together. It can also specify SNI filters which are used to select the right certificate for a requesting client. Without filters haproxy will chose a matching certificate. A file might look like this:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>cert1.pem
+cert2.pem *.some-domain !special.some-domain
+cert3.pem special.some-domain</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>The important thing to know is that a file like cert1.pem is created by combining at cert and a key, simply by doing <code>cat cert.crt key.pem &gt; cert1.pem</code> in this example.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+
+  </div><a class="u-url" href="/2019/02/haproxy-for-redirect/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">A diary of problems</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">A diary of problems</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/danj3"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">danj3</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Dan&#39;s technology blog for development, systems, elixir, authentication, keycloak, ldap, kerberos, linux</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

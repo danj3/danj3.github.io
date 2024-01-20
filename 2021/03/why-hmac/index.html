@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Why HMAC | A diary of problems</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="Why HMAC" />
+<meta name="author" content="Dan" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Need to generate a constant hash key from an ID, or compound ID, but don&#39;t want it to be too easy for a 3rd party to brute force generate (assuming they know the ID domain and in a compound the right ordering, and other transformations)? You may be tempted to add a secret string to the key and run it through SHA-256. But this is what HMAC is for and it addresses a specific problem with using just a SHA: length extension attacks. The wikipedia page on HMAC does the topic justice. The synopsis is that simply concatenating (key || message) or (message || key ) or even (key1 || message || key2 ) all have weaknesses. More to the point, there&#39;s no need to consider that approach because HMAC does this job without those problems. A key security point: The cryptographic strength of the HMAC depends upon the size of the secret key that is used. The most common attack against HMACs is brute force to uncover the secret key. HMACs are substantially less affected by collisions than their underlying hashing algorithms alone. https://en.wikipedia.org/wiki/HMAC#cite_note-8 How to generate A simple example using openssl: % openssl dgst -sha256 -hmac &quot;my key&quot; foobar 4e77e850fea2bcb0ddf3681d2a0d79cfb7373f4a36b0c5fd7f754d7853f74946 This is not a good key! As the above citation indicates, brute force attacks become impractical with long keys. openssl has PBKDF2 built in for some utilities, but not a way to generate a password only. The enc module purports to have such a feature (-P) but I&#39;ve been unable to obtain that result." />
+<meta property="og:description" content="Need to generate a constant hash key from an ID, or compound ID, but don&#39;t want it to be too easy for a 3rd party to brute force generate (assuming they know the ID domain and in a compound the right ordering, and other transformations)? You may be tempted to add a secret string to the key and run it through SHA-256. But this is what HMAC is for and it addresses a specific problem with using just a SHA: length extension attacks. The wikipedia page on HMAC does the topic justice. The synopsis is that simply concatenating (key || message) or (message || key ) or even (key1 || message || key2 ) all have weaknesses. More to the point, there&#39;s no need to consider that approach because HMAC does this job without those problems. A key security point: The cryptographic strength of the HMAC depends upon the size of the secret key that is used. The most common attack against HMACs is brute force to uncover the secret key. HMACs are substantially less affected by collisions than their underlying hashing algorithms alone. https://en.wikipedia.org/wiki/HMAC#cite_note-8 How to generate A simple example using openssl: % openssl dgst -sha256 -hmac &quot;my key&quot; foobar 4e77e850fea2bcb0ddf3681d2a0d79cfb7373f4a36b0c5fd7f754d7853f74946 This is not a good key! As the above citation indicates, brute force attacks become impractical with long keys. openssl has PBKDF2 built in for some utilities, but not a way to generate a password only. The enc module purports to have such a feature (-P) but I&#39;ve been unable to obtain that result." />
+<link rel="canonical" href="http://localhost:4005/2021/03/why-hmac/" />
+<meta property="og:url" content="http://localhost:4005/2021/03/why-hmac/" />
+<meta property="og:site_name" content="A diary of problems" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-03-30T11:28:14-04:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Why HMAC" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dan"},"dateModified":"2021-03-30T11:28:14-04:00","datePublished":"2021-03-30T11:28:14-04:00","description":"Need to generate a constant hash key from an ID, or compound ID, but don&#39;t want it to be too easy for a 3rd party to brute force generate (assuming they know the ID domain and in a compound the right ordering, and other transformations)? You may be tempted to add a secret string to the key and run it through SHA-256. But this is what HMAC is for and it addresses a specific problem with using just a SHA: length extension attacks. The wikipedia page on HMAC does the topic justice. The synopsis is that simply concatenating (key || message) or (message || key ) or even (key1 || message || key2 ) all have weaknesses. More to the point, there&#39;s no need to consider that approach because HMAC does this job without those problems. A key security point: The cryptographic strength of the HMAC depends upon the size of the secret key that is used. The most common attack against HMACs is brute force to uncover the secret key. HMACs are substantially less affected by collisions than their underlying hashing algorithms alone. https://en.wikipedia.org/wiki/HMAC#cite_note-8 How to generate A simple example using openssl: % openssl dgst -sha256 -hmac &quot;my key&quot; foobar 4e77e850fea2bcb0ddf3681d2a0d79cfb7373f4a36b0c5fd7f754d7853f74946 This is not a good key! As the above citation indicates, brute force attacks become impractical with long keys. openssl has PBKDF2 built in for some utilities, but not a way to generate a password only. The enc module purports to have such a feature (-P) but I&#39;ve been unable to obtain that result.","headline":"Why HMAC","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4005/2021/03/why-hmac/"},"url":"http://localhost:4005/2021/03/why-hmac/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4005/feed.xml" title="A diary of problems" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">A diary of problems</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/privacy-policy/">Privacy Policy</a><a class="page-link" href="/company/">Triskelion, LLC</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Why HMAC</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-03-30T11:28:14-04:00" itemprop="datePublished">Mar 30, 2021
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Dan</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><!-- wp:paragraph --></p>
+<p>Need to generate a constant hash key from an ID, or compound ID, but don't want it to be too easy for a 3rd party to brute force generate (assuming they know the ID domain and in a compound the right ordering, and other transformations)? You may be tempted to add a secret string to the key and run it through SHA-256. But this is what HMAC is for and it addresses a specific problem with using just a SHA: <a href="https://en.wikipedia.org/wiki/Length_extension_attack">length extension attacks</a>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The <a href="https://en.wikipedia.org/wiki/HMAC">wikipedia page on HMAC</a> does the topic justice. The synopsis is that simply concatenating (key || message) or (message || key ) or even (key1 || message || key2 ) all have weaknesses. More to the point, there's no need to consider that approach because HMAC does this job without those problems. A key security point:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>The cryptographic strength of the HMAC depends upon the size of the secret key that is used. The most common attack against HMACs is brute force to uncover the secret key. HMACs are substantially less affected by collisions than their underlying hashing algorithms alone.</p>
+<p><cite>https://en.wikipedia.org/wiki/HMAC#cite_note-8</cite></p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:heading --></p>
+<h2>How to generate</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>A simple example using openssl:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:syntaxhighlighter/code --></p>
+<pre class="wp-block-syntaxhighlighter-code">% openssl dgst -sha256 -hmac "my key"
+foobar
+4e77e850fea2bcb0ddf3681d2a0d79cfb7373f4a36b0c5fd7f754d7853f74946</pre>
+<p><!-- /wp:syntaxhighlighter/code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is not a good key! As the above citation indicates, brute force attacks become impractical with long keys. openssl has PBKDF2 built in for some utilities, but not a way to generate a password only. The enc module purports to have such a feature (-P) but I've been unable to obtain that result.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
+
+  </div><a class="u-url" href="/2021/03/why-hmac/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">A diary of problems</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">A diary of problems</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/danj3"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">danj3</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Dan&#39;s technology blog for development, systems, elixir, authentication, keycloak, ldap, kerberos, linux</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

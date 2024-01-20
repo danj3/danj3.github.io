@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>docker network conflict? | A diary of problems</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="docker network conflict?" />
+<meta name="author" content="Dan" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Docker uses 172.17.0.0 as the first network and increments the second octet for each new network. If your network happens to use internal networks in the range, you&#39;ll have routing problems. Here&#39;s how to change what docker uses for numbering networks. Docker uses daemon.json which is usually in /etc/docker if you install it as a package. If you install docker as a snap, which is recommended, you&#39;ll find it in /var/snap/docker/current/config/daemon.json. Here&#39;s an example of the change to make: { &quot;log-level&quot;: &quot;error&quot;, &quot;storage-driver&quot;: &quot;overlay2&quot;, &quot;default-address-pools&quot;: &#91; {&quot;base&quot;:&quot;172.100.0.0/16&quot;,&quot;size&quot;:24} ] } Add the &quot;default-address-pools&quot; key and the associated value, change the network base to suit your needs. Remember to add a , to the end of the prior line. The base will be the first network, successive networks will increment from there. I&#39;ve been unable to find clear documentation on the base value string, but my intuition is that the /16 means each new network provisioned will increment at the 2nd octet, in this case 172.100, 172.101, 172.102, and so on. However, the size, i.e. netmask, will be a /24. It&#39;s not clear why the network stepping and size are not the same. If you&#39;re using snaps, to reload the configuration means restarting the daemon: sudo snap restart docker If it doesn&#39;t restart, you can see the logs: sudo snap logs docker To see that the change worked, take a look at the bridge, default, network: $ docker network inspect bridge &#91; { &quot;Name&quot;: &quot;bridge&quot;, &quot;Id&quot;: &quot;c96d8c88432e1120cf0260677f503eb1d2e04c692f81d2e9a034115384e8a763&quot;, &quot;Created&quot;: &quot;2021-01-29T07:36:04.76114402-05:00&quot;, &quot;Scope&quot;: &quot;local&quot;, &quot;Driver&quot;: &quot;bridge&quot;, &quot;EnableIPv6&quot;: false, &quot;IPAM&quot;: { &quot;Driver&quot;: &quot;default&quot;, &quot;Options&quot;: null, &quot;Config&quot;: &#91; { &quot;Subnet&quot;: &quot;172.100.0.0/24&quot; } ] }, &quot;Internal&quot;: false, &quot;Attachable&quot;: false, &quot;Ingress&quot;: false, &quot;ConfigFrom&quot;: { &quot;Network&quot;: &quot;&quot; }, &quot;ConfigOnly&quot;: false, &quot;Containers&quot;: {}, &quot;Options&quot;: { &quot;com.docker.network.bridge.default_bridge&quot;: &quot;true&quot;, &quot;com.docker.network.bridge.enable_icc&quot;: &quot;true&quot;, &quot;com.docker.network.bridge.enable_ip_masquerade&quot;: &quot;true&quot;, &quot;com.docker.network.bridge.host_binding_ipv4&quot;: &quot;0.0.0.0&quot;, &quot;com.docker.network.bridge.name&quot;: &quot;docker0&quot;, &quot;com.docker.network.driver.mtu&quot;: &quot;1500&quot; }, &quot;Labels&quot;: {} } ]" />
+<meta property="og:description" content="Docker uses 172.17.0.0 as the first network and increments the second octet for each new network. If your network happens to use internal networks in the range, you&#39;ll have routing problems. Here&#39;s how to change what docker uses for numbering networks. Docker uses daemon.json which is usually in /etc/docker if you install it as a package. If you install docker as a snap, which is recommended, you&#39;ll find it in /var/snap/docker/current/config/daemon.json. Here&#39;s an example of the change to make: { &quot;log-level&quot;: &quot;error&quot;, &quot;storage-driver&quot;: &quot;overlay2&quot;, &quot;default-address-pools&quot;: &#91; {&quot;base&quot;:&quot;172.100.0.0/16&quot;,&quot;size&quot;:24} ] } Add the &quot;default-address-pools&quot; key and the associated value, change the network base to suit your needs. Remember to add a , to the end of the prior line. The base will be the first network, successive networks will increment from there. I&#39;ve been unable to find clear documentation on the base value string, but my intuition is that the /16 means each new network provisioned will increment at the 2nd octet, in this case 172.100, 172.101, 172.102, and so on. However, the size, i.e. netmask, will be a /24. It&#39;s not clear why the network stepping and size are not the same. If you&#39;re using snaps, to reload the configuration means restarting the daemon: sudo snap restart docker If it doesn&#39;t restart, you can see the logs: sudo snap logs docker To see that the change worked, take a look at the bridge, default, network: $ docker network inspect bridge &#91; { &quot;Name&quot;: &quot;bridge&quot;, &quot;Id&quot;: &quot;c96d8c88432e1120cf0260677f503eb1d2e04c692f81d2e9a034115384e8a763&quot;, &quot;Created&quot;: &quot;2021-01-29T07:36:04.76114402-05:00&quot;, &quot;Scope&quot;: &quot;local&quot;, &quot;Driver&quot;: &quot;bridge&quot;, &quot;EnableIPv6&quot;: false, &quot;IPAM&quot;: { &quot;Driver&quot;: &quot;default&quot;, &quot;Options&quot;: null, &quot;Config&quot;: &#91; { &quot;Subnet&quot;: &quot;172.100.0.0/24&quot; } ] }, &quot;Internal&quot;: false, &quot;Attachable&quot;: false, &quot;Ingress&quot;: false, &quot;ConfigFrom&quot;: { &quot;Network&quot;: &quot;&quot; }, &quot;ConfigOnly&quot;: false, &quot;Containers&quot;: {}, &quot;Options&quot;: { &quot;com.docker.network.bridge.default_bridge&quot;: &quot;true&quot;, &quot;com.docker.network.bridge.enable_icc&quot;: &quot;true&quot;, &quot;com.docker.network.bridge.enable_ip_masquerade&quot;: &quot;true&quot;, &quot;com.docker.network.bridge.host_binding_ipv4&quot;: &quot;0.0.0.0&quot;, &quot;com.docker.network.bridge.name&quot;: &quot;docker0&quot;, &quot;com.docker.network.driver.mtu&quot;: &quot;1500&quot; }, &quot;Labels&quot;: {} } ]" />
+<link rel="canonical" href="http://localhost:4005/2021/01/docker-network-conflict/" />
+<meta property="og:url" content="http://localhost:4005/2021/01/docker-network-conflict/" />
+<meta property="og:site_name" content="A diary of problems" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-29T10:43:27-05:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="docker network conflict?" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dan"},"dateModified":"2021-01-29T10:43:27-05:00","datePublished":"2021-01-29T10:43:27-05:00","description":"Docker uses 172.17.0.0 as the first network and increments the second octet for each new network. If your network happens to use internal networks in the range, you&#39;ll have routing problems. Here&#39;s how to change what docker uses for numbering networks. Docker uses daemon.json which is usually in /etc/docker if you install it as a package. If you install docker as a snap, which is recommended, you&#39;ll find it in /var/snap/docker/current/config/daemon.json. Here&#39;s an example of the change to make: { &quot;log-level&quot;: &quot;error&quot;, &quot;storage-driver&quot;: &quot;overlay2&quot;, &quot;default-address-pools&quot;: &#91; {&quot;base&quot;:&quot;172.100.0.0/16&quot;,&quot;size&quot;:24} ] } Add the &quot;default-address-pools&quot; key and the associated value, change the network base to suit your needs. Remember to add a , to the end of the prior line. The base will be the first network, successive networks will increment from there. I&#39;ve been unable to find clear documentation on the base value string, but my intuition is that the /16 means each new network provisioned will increment at the 2nd octet, in this case 172.100, 172.101, 172.102, and so on. However, the size, i.e. netmask, will be a /24. It&#39;s not clear why the network stepping and size are not the same. If you&#39;re using snaps, to reload the configuration means restarting the daemon: sudo snap restart docker If it doesn&#39;t restart, you can see the logs: sudo snap logs docker To see that the change worked, take a look at the bridge, default, network: $ docker network inspect bridge &#91; { &quot;Name&quot;: &quot;bridge&quot;, &quot;Id&quot;: &quot;c96d8c88432e1120cf0260677f503eb1d2e04c692f81d2e9a034115384e8a763&quot;, &quot;Created&quot;: &quot;2021-01-29T07:36:04.76114402-05:00&quot;, &quot;Scope&quot;: &quot;local&quot;, &quot;Driver&quot;: &quot;bridge&quot;, &quot;EnableIPv6&quot;: false, &quot;IPAM&quot;: { &quot;Driver&quot;: &quot;default&quot;, &quot;Options&quot;: null, &quot;Config&quot;: &#91; { &quot;Subnet&quot;: &quot;172.100.0.0/24&quot; } ] }, &quot;Internal&quot;: false, &quot;Attachable&quot;: false, &quot;Ingress&quot;: false, &quot;ConfigFrom&quot;: { &quot;Network&quot;: &quot;&quot; }, &quot;ConfigOnly&quot;: false, &quot;Containers&quot;: {}, &quot;Options&quot;: { &quot;com.docker.network.bridge.default_bridge&quot;: &quot;true&quot;, &quot;com.docker.network.bridge.enable_icc&quot;: &quot;true&quot;, &quot;com.docker.network.bridge.enable_ip_masquerade&quot;: &quot;true&quot;, &quot;com.docker.network.bridge.host_binding_ipv4&quot;: &quot;0.0.0.0&quot;, &quot;com.docker.network.bridge.name&quot;: &quot;docker0&quot;, &quot;com.docker.network.driver.mtu&quot;: &quot;1500&quot; }, &quot;Labels&quot;: {} } ]","headline":"docker network conflict?","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4005/2021/01/docker-network-conflict/"},"url":"http://localhost:4005/2021/01/docker-network-conflict/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4005/feed.xml" title="A diary of problems" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">A diary of problems</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/privacy-policy/">Privacy Policy</a><a class="page-link" href="/company/">Triskelion, LLC</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">docker network conflict?</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-01-29T10:43:27-05:00" itemprop="datePublished">Jan 29, 2021
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Dan</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><!-- wp:paragraph --></p>
+<p>Docker uses 172.17.0.0 as the first network and increments the second octet for each new network. If your network happens to use internal networks in the range, you'll have routing problems. Here's how to change what docker uses for numbering networks.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:more --><br />
+<!--more--><br />
+<!-- /wp:more --></p>
+<p><!-- wp:paragraph --></p>
+<p>Docker uses <code>daemon.json</code> which is usually in <code>/etc/docker</code> if you install it as a package. If you install docker as a snap, which is recommended, you'll find it in <code>/var/snap/docker/current/config/daemon.json</code>. Here's an example of the change to make:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>{
+  "log-level":        "error",
+  "storage-driver":   "overlay2",
+  "default-address-pools":
+  &#91;
+    {"base":"172.100.0.0/16","size":24}
+  ]
+}</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>Add the "default-address-pools" key and the associated value, change the network base to suit your needs. Remember to add a <code>,</code> to the end of the prior line.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The base will be the first network, successive networks will increment from there. I've been unable to find clear documentation on the base value string, but my intuition is that the <code>/16</code> means each new network provisioned will increment at the 2nd octet, in this case 172.100, 172.101, 172.102, and so on. However, the size, i.e. netmask, will be a <code>/24</code>. It's not clear why the network stepping and size are not the same.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>If you're using snaps, to reload the configuration means restarting the daemon:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>sudo snap restart docker</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>If it doesn't restart, you can see the logs:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>sudo snap logs docker</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>To see that the change worked, take a look at the bridge, default,  network:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>$ docker network inspect bridge
+&#91;
+    {
+        "Name": "bridge",
+        "Id": "c96d8c88432e1120cf0260677f503eb1d2e04c692f81d2e9a034115384e8a763",
+        "Created": "2021-01-29T07:36:04.76114402-05:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": &#91;
+                {
+                    "Subnet": "172.100.0.0/24"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {
+            "com.docker.network.bridge.default_bridge": "true",
+            "com.docker.network.bridge.enable_icc": "true",
+            "com.docker.network.bridge.enable_ip_masquerade": "true",
+            "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
+            "com.docker.network.bridge.name": "docker0",
+            "com.docker.network.driver.mtu": "1500"
+        },
+        "Labels": {}
+    }
+]
+</code></pre>
+<p><!-- /wp:code --></p>
+
+  </div><a class="u-url" href="/2021/01/docker-network-conflict/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">A diary of problems</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">A diary of problems</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/danj3"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">danj3</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Dan&#39;s technology blog for development, systems, elixir, authentication, keycloak, ldap, kerberos, linux</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

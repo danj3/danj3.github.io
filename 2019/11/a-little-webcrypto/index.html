@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>A little WebCrypto | A diary of problems</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="A little WebCrypto" />
+<meta name="author" content="Dan" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Modern browsers have built-in crypto, WebCrypto . It is fast and secure. OpenSSL is pervasive on the server side. This article is about how to encrypt with a public key in the browser and decrypt it on the server with OpenSSL. The problem I encountered is a thinly referenced component: message padding with a secure hash. Security A few essential browser security facts: window.crypto.subtle is read-only so it cannot be overwritten with polyfill crypto keys can be made unexportable so that malicious code can&#39;t steal them. secure random number generation, an essential for secure crypto Support in older browsers vary. I&#39;m not going into those details and how if you decide to use WebCrypto things won&#39;t work for everyone everywhere. But this post from 2016 covers it from then. My view is that if people do not keep their browsers up to date then the security implications are much broader than WebCrypto support. Public Key Encryption I am interested in using the public key of an RSA pair to encrypt a small message that only the private key holder can decrypt. In this case the encryption is happening in the browser. Depending on the version of OpenSSL, I found that the padding digest algorithm support varied. The default for OpenSSL RSA encrypt and decrypt is SHA-1. Let me be more specific, when using RSA-OAEP, the RSA-OAEP-MD default is SHA-1. This MD business is part of the encryption process and doesn&#39;t pertain to the keys. Importing a public key To use a public key (or any key for that matter) WebCrypto has to import it. For my case: window.crypto.subtle.importKey( &quot;spki&quot;, binaryDer, { name: &quot;RSA-OAEP&quot;, hash: &quot;SHA-256&quot; }, true, [&quot;encrypt&quot;] ); The importKey specifics here are: spki - this is specifically the mode of encrypting with a public key binaryDer - is the DER encoded public key algorithm - We are using RSA-OAEP and specifying the digest function &quot;SHA-256&quot; as the RSA-OAEP-MD function. true - This sets if the key is exportable. Set to false if you want to inhibit export. [ &quot;encrypt&quot; ] - a list of operations that this key can be used for As you may see, some of these parameters are not about importing the key but how it can be used. The part that causes problems is the hash option. This option applies to the encryption process and not import. However, if you have an old version of OpenSSL or some software that tries to track the capabilities of OpenSSL and guesses wrong, being able to change the MD parameter may not be possible. The simplest answer is to upgrade OpenSSL and whatever software you&#39;re using. Sometimes that&#39;s not possible and the way to fix it is to use hash: &quot;SHA-1&quot;. Using SHA-1 is strongly discouraged because it is considered vulnerable. However, SHA-1 is the default for OpenSSL, so pick your poison. One thing that surprised me in this investigation is that I could not find a utility that would indicate what RSA-OAEP-MD option was used. I&#39;m not sure how consensus is supposed to be established except for ahead of time. Here is an example page that covers the browser side. OpenSSL The question of padding with hashes came up in 2014 and it is a combination of openssl commands being &quot;legacy&quot; as well as deficiencies in the documentation. Let&#39;s look at some examples. All the examples use the same key pair and all encryption is done with the above browser example. Encrypting some text using SHA-256 padding hash and trying to use the rasutl command on a system with OpenSSL 1.0.2k-fips results in: $ base64 -d | openssl rsautl -inkey key -decrypt QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg== RSA operation error 139719484266384:error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error:rsa_pk1.c:301: 139719484266384:error:04065072:rsa routines:RSA_EAY_PRIVATE_DECRYPT:padding check failed:rsa_eay.c:643: On a different system (using LibreSSL 2.6.5): $ base64 -D | openssl rsautl -inkey key -decrypt QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg== RSA operation error 4572378732:error:04FFF06B:rsa routines:CRYPTO_internal:block type is not 02:/BuildRoot/Library/Caches/com.apple.xbs/Sources/libressl/libressl-22.260.1/libressl-2.6/crypto/rsa/rsa_pk1.c:185: 4572378732:error:04FFF072:rsa routines:CRYPTO_internal:padding check failed:/BuildRoot/Library/Caches/com.apple.xbs/Sources/libressl/libressl-22.260.1/libressl-2.6/crypto/rsa/rsa_eay.c:580: The error message, as is the general trend, will only make sense after you know what the problem is. What they mean is that the required padding has the wrong content. RSA encryption pad is essential, to quote: For example RSA Encryption padding is randomized, ensuring that the same message encrypted multiple times looks different each time. It also avoids other weaknesses, such as encrypting the same message using different RSA keys leaking the message, or an attacker creating messages derived from some other ciphertexts. From https://crypto.stackexchange.com/questions/3608/why-is-padding-used-for-rsa-encryption-given-that-it-is-not-a-block-cipher You can find other more technical answers as well. Multiple problems are afoot: OpenSSL uses SHA-1 as the default padding algorithm SHA-1 is considered vulnerable, though how that affects the RSA padding requirement is unclear to me. rsautl has no options to change the padding algorithm rsautl is considered deprecated and no docs say to use pkeyutl instead The replacement pkeyutl is of a more generic nature and options are passed through to the cipher through this more generic interface Nowhere in all the openssl documentation does it mention a way to set the padding algorithm. The above github question from 2014 covers all of these issues, but you have to be lucky enough to find it! In the end, this is how it&#39;s done: $ base64 -d | openssl pkeyutl -inkey key -decrypt -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg== The eagle flies at twilight" />
+<meta property="og:description" content="Modern browsers have built-in crypto, WebCrypto . It is fast and secure. OpenSSL is pervasive on the server side. This article is about how to encrypt with a public key in the browser and decrypt it on the server with OpenSSL. The problem I encountered is a thinly referenced component: message padding with a secure hash. Security A few essential browser security facts: window.crypto.subtle is read-only so it cannot be overwritten with polyfill crypto keys can be made unexportable so that malicious code can&#39;t steal them. secure random number generation, an essential for secure crypto Support in older browsers vary. I&#39;m not going into those details and how if you decide to use WebCrypto things won&#39;t work for everyone everywhere. But this post from 2016 covers it from then. My view is that if people do not keep their browsers up to date then the security implications are much broader than WebCrypto support. Public Key Encryption I am interested in using the public key of an RSA pair to encrypt a small message that only the private key holder can decrypt. In this case the encryption is happening in the browser. Depending on the version of OpenSSL, I found that the padding digest algorithm support varied. The default for OpenSSL RSA encrypt and decrypt is SHA-1. Let me be more specific, when using RSA-OAEP, the RSA-OAEP-MD default is SHA-1. This MD business is part of the encryption process and doesn&#39;t pertain to the keys. Importing a public key To use a public key (or any key for that matter) WebCrypto has to import it. For my case: window.crypto.subtle.importKey( &quot;spki&quot;, binaryDer, { name: &quot;RSA-OAEP&quot;, hash: &quot;SHA-256&quot; }, true, [&quot;encrypt&quot;] ); The importKey specifics here are: spki - this is specifically the mode of encrypting with a public key binaryDer - is the DER encoded public key algorithm - We are using RSA-OAEP and specifying the digest function &quot;SHA-256&quot; as the RSA-OAEP-MD function. true - This sets if the key is exportable. Set to false if you want to inhibit export. [ &quot;encrypt&quot; ] - a list of operations that this key can be used for As you may see, some of these parameters are not about importing the key but how it can be used. The part that causes problems is the hash option. This option applies to the encryption process and not import. However, if you have an old version of OpenSSL or some software that tries to track the capabilities of OpenSSL and guesses wrong, being able to change the MD parameter may not be possible. The simplest answer is to upgrade OpenSSL and whatever software you&#39;re using. Sometimes that&#39;s not possible and the way to fix it is to use hash: &quot;SHA-1&quot;. Using SHA-1 is strongly discouraged because it is considered vulnerable. However, SHA-1 is the default for OpenSSL, so pick your poison. One thing that surprised me in this investigation is that I could not find a utility that would indicate what RSA-OAEP-MD option was used. I&#39;m not sure how consensus is supposed to be established except for ahead of time. Here is an example page that covers the browser side. OpenSSL The question of padding with hashes came up in 2014 and it is a combination of openssl commands being &quot;legacy&quot; as well as deficiencies in the documentation. Let&#39;s look at some examples. All the examples use the same key pair and all encryption is done with the above browser example. Encrypting some text using SHA-256 padding hash and trying to use the rasutl command on a system with OpenSSL 1.0.2k-fips results in: $ base64 -d | openssl rsautl -inkey key -decrypt QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg== RSA operation error 139719484266384:error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error:rsa_pk1.c:301: 139719484266384:error:04065072:rsa routines:RSA_EAY_PRIVATE_DECRYPT:padding check failed:rsa_eay.c:643: On a different system (using LibreSSL 2.6.5): $ base64 -D | openssl rsautl -inkey key -decrypt QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg== RSA operation error 4572378732:error:04FFF06B:rsa routines:CRYPTO_internal:block type is not 02:/BuildRoot/Library/Caches/com.apple.xbs/Sources/libressl/libressl-22.260.1/libressl-2.6/crypto/rsa/rsa_pk1.c:185: 4572378732:error:04FFF072:rsa routines:CRYPTO_internal:padding check failed:/BuildRoot/Library/Caches/com.apple.xbs/Sources/libressl/libressl-22.260.1/libressl-2.6/crypto/rsa/rsa_eay.c:580: The error message, as is the general trend, will only make sense after you know what the problem is. What they mean is that the required padding has the wrong content. RSA encryption pad is essential, to quote: For example RSA Encryption padding is randomized, ensuring that the same message encrypted multiple times looks different each time. It also avoids other weaknesses, such as encrypting the same message using different RSA keys leaking the message, or an attacker creating messages derived from some other ciphertexts. From https://crypto.stackexchange.com/questions/3608/why-is-padding-used-for-rsa-encryption-given-that-it-is-not-a-block-cipher You can find other more technical answers as well. Multiple problems are afoot: OpenSSL uses SHA-1 as the default padding algorithm SHA-1 is considered vulnerable, though how that affects the RSA padding requirement is unclear to me. rsautl has no options to change the padding algorithm rsautl is considered deprecated and no docs say to use pkeyutl instead The replacement pkeyutl is of a more generic nature and options are passed through to the cipher through this more generic interface Nowhere in all the openssl documentation does it mention a way to set the padding algorithm. The above github question from 2014 covers all of these issues, but you have to be lucky enough to find it! In the end, this is how it&#39;s done: $ base64 -d | openssl pkeyutl -inkey key -decrypt -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg== The eagle flies at twilight" />
+<link rel="canonical" href="http://localhost:4005/2019/11/a-little-webcrypto/" />
+<meta property="og:url" content="http://localhost:4005/2019/11/a-little-webcrypto/" />
+<meta property="og:site_name" content="A diary of problems" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-11-25T22:15:15-05:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="A little WebCrypto" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dan"},"dateModified":"2019-11-25T22:15:15-05:00","datePublished":"2019-11-25T22:15:15-05:00","description":"Modern browsers have built-in crypto, WebCrypto . It is fast and secure. OpenSSL is pervasive on the server side. This article is about how to encrypt with a public key in the browser and decrypt it on the server with OpenSSL. The problem I encountered is a thinly referenced component: message padding with a secure hash. Security A few essential browser security facts: window.crypto.subtle is read-only so it cannot be overwritten with polyfill crypto keys can be made unexportable so that malicious code can&#39;t steal them. secure random number generation, an essential for secure crypto Support in older browsers vary. I&#39;m not going into those details and how if you decide to use WebCrypto things won&#39;t work for everyone everywhere. But this post from 2016 covers it from then. My view is that if people do not keep their browsers up to date then the security implications are much broader than WebCrypto support. Public Key Encryption I am interested in using the public key of an RSA pair to encrypt a small message that only the private key holder can decrypt. In this case the encryption is happening in the browser. Depending on the version of OpenSSL, I found that the padding digest algorithm support varied. The default for OpenSSL RSA encrypt and decrypt is SHA-1. Let me be more specific, when using RSA-OAEP, the RSA-OAEP-MD default is SHA-1. This MD business is part of the encryption process and doesn&#39;t pertain to the keys. Importing a public key To use a public key (or any key for that matter) WebCrypto has to import it. For my case: window.crypto.subtle.importKey( &quot;spki&quot;, binaryDer, { name: &quot;RSA-OAEP&quot;, hash: &quot;SHA-256&quot; }, true, [&quot;encrypt&quot;] ); The importKey specifics here are: spki - this is specifically the mode of encrypting with a public key binaryDer - is the DER encoded public key algorithm - We are using RSA-OAEP and specifying the digest function &quot;SHA-256&quot; as the RSA-OAEP-MD function. true - This sets if the key is exportable. Set to false if you want to inhibit export. [ &quot;encrypt&quot; ] - a list of operations that this key can be used for As you may see, some of these parameters are not about importing the key but how it can be used. The part that causes problems is the hash option. This option applies to the encryption process and not import. However, if you have an old version of OpenSSL or some software that tries to track the capabilities of OpenSSL and guesses wrong, being able to change the MD parameter may not be possible. The simplest answer is to upgrade OpenSSL and whatever software you&#39;re using. Sometimes that&#39;s not possible and the way to fix it is to use hash: &quot;SHA-1&quot;. Using SHA-1 is strongly discouraged because it is considered vulnerable. However, SHA-1 is the default for OpenSSL, so pick your poison. One thing that surprised me in this investigation is that I could not find a utility that would indicate what RSA-OAEP-MD option was used. I&#39;m not sure how consensus is supposed to be established except for ahead of time. Here is an example page that covers the browser side. OpenSSL The question of padding with hashes came up in 2014 and it is a combination of openssl commands being &quot;legacy&quot; as well as deficiencies in the documentation. Let&#39;s look at some examples. All the examples use the same key pair and all encryption is done with the above browser example. Encrypting some text using SHA-256 padding hash and trying to use the rasutl command on a system with OpenSSL 1.0.2k-fips results in: $ base64 -d | openssl rsautl -inkey key -decrypt QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg== RSA operation error 139719484266384:error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error:rsa_pk1.c:301: 139719484266384:error:04065072:rsa routines:RSA_EAY_PRIVATE_DECRYPT:padding check failed:rsa_eay.c:643: On a different system (using LibreSSL 2.6.5): $ base64 -D | openssl rsautl -inkey key -decrypt QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg== RSA operation error 4572378732:error:04FFF06B:rsa routines:CRYPTO_internal:block type is not 02:/BuildRoot/Library/Caches/com.apple.xbs/Sources/libressl/libressl-22.260.1/libressl-2.6/crypto/rsa/rsa_pk1.c:185: 4572378732:error:04FFF072:rsa routines:CRYPTO_internal:padding check failed:/BuildRoot/Library/Caches/com.apple.xbs/Sources/libressl/libressl-22.260.1/libressl-2.6/crypto/rsa/rsa_eay.c:580: The error message, as is the general trend, will only make sense after you know what the problem is. What they mean is that the required padding has the wrong content. RSA encryption pad is essential, to quote: For example RSA Encryption padding is randomized, ensuring that the same message encrypted multiple times looks different each time. It also avoids other weaknesses, such as encrypting the same message using different RSA keys leaking the message, or an attacker creating messages derived from some other ciphertexts. From https://crypto.stackexchange.com/questions/3608/why-is-padding-used-for-rsa-encryption-given-that-it-is-not-a-block-cipher You can find other more technical answers as well. Multiple problems are afoot: OpenSSL uses SHA-1 as the default padding algorithm SHA-1 is considered vulnerable, though how that affects the RSA padding requirement is unclear to me. rsautl has no options to change the padding algorithm rsautl is considered deprecated and no docs say to use pkeyutl instead The replacement pkeyutl is of a more generic nature and options are passed through to the cipher through this more generic interface Nowhere in all the openssl documentation does it mention a way to set the padding algorithm. The above github question from 2014 covers all of these issues, but you have to be lucky enough to find it! In the end, this is how it&#39;s done: $ base64 -d | openssl pkeyutl -inkey key -decrypt -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg== The eagle flies at twilight","headline":"A little WebCrypto","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4005/2019/11/a-little-webcrypto/"},"url":"http://localhost:4005/2019/11/a-little-webcrypto/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4005/feed.xml" title="A diary of problems" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">A diary of problems</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/privacy-policy/">Privacy Policy</a><a class="page-link" href="/company/">Triskelion, LLC</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">A little WebCrypto</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2019-11-25T22:15:15-05:00" itemprop="datePublished">Nov 25, 2019
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Dan</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><!-- wp:paragraph --></p>
+<p>Modern browsers have built-in crypto, <a href="https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto">WebCrypto </a>. It is fast and secure. OpenSSL is pervasive on the server side. This article is about how to encrypt with a public key in the browser and decrypt it on the server with OpenSSL. The problem I encountered is a thinly referenced component: message padding with a secure hash.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:more --><br />
+<!--more--><br />
+<!-- /wp:more --></p>
+<p><!-- wp:heading --></p>
+<h2>Security</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>A few essential browser security facts:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul>
+<li><code>window.crypto.subtle</code> is read-only so it cannot be overwritten with polyfill</li>
+<li>crypto keys can be made unexportable so that malicious code can't steal them.</li>
+<li>secure random number generation, an essential for secure crypto</li>
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Support in older browsers vary. I'm not going into those details and how if you decide to use WebCrypto things won't work for everyone everywhere. But this <a href="https://www.boxcryptor.com/en/blog/post/building-an-app-with-webcrypto-in-2016/">post</a> from 2016 covers it from then. My view is that if people do not keep their browsers up to date then the security implications are much broader than WebCrypto support.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2>Public Key Encryption</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>I am interested in using the public key of an RSA pair to encrypt a small message that only the private key holder can decrypt. In this case the encryption is happening in the browser. Depending on the version of OpenSSL, I found that the padding digest algorithm support varied. The default for OpenSSL RSA encrypt and decrypt is SHA-1. Let me be more specific, when using RSA-OAEP, the RSA-OAEP-MD default is SHA-1. This MD business is part of the encryption process and doesn't pertain to the keys.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2>Importing a public key</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>To use a public key (or any key for that matter) WebCrypto has to import it. For my case:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>window.crypto.subtle.importKey(
+      "spki",
+      binaryDer,
+      {
+        name: "RSA-OAEP",
+        hash: "SHA-256"
+      },
+      true,
+      ["encrypt"]
+    );</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>The <a href="https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey">importKey </a> specifics here are:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul>
+<li>spki - this is specifically the mode of encrypting with a public key</li>
+<li>binaryDer - is the DER encoded public key</li>
+<li>algorithm - We are using RSA-OAEP and specifying the digest function "SHA-256" as the RSA-OAEP-MD function.</li>
+<li>true - This sets if the key is exportable. Set to false if you want to inhibit export.</li>
+<li>[ "encrypt" ] - a list of operations that this key can be used for</li>
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>As you may see, some of these parameters are not about importing the key but how it can be used. The part that causes problems is the <code>hash</code> option. This option applies to the encryption process and not import. However, if you have an old version of OpenSSL or some software that tries to track the capabilities of OpenSSL and guesses wrong, being able to change the MD parameter may not be possible.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The simplest answer is to upgrade OpenSSL and whatever software you're using. Sometimes that's not possible and the way to fix it is to use <code>hash: "SHA-1"</code>. Using SHA-1 is strongly discouraged because it is considered vulnerable. However, SHA-1 is the default for OpenSSL, so pick your poison.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>One thing that surprised me in this investigation is that I could not find a utility that would indicate what RSA-OAEP-MD option was used. I'm not sure how consensus is supposed to be established except for ahead of time.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Here is an <a href="https://blog.3skel.com/wp-content/uploads/2019/11/crypt2.html">example page</a> that covers the browser side.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2>OpenSSL</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The question of padding with hashes <a href="https://github.com/openssl/openssl/issues/10171">came up in 2014</a> and it is a combination of openssl commands being "legacy" as well as deficiencies in the documentation. Let's look at some examples. All the examples use the same key pair and all encryption is done with the above browser example.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Encrypting some text using SHA-256 padding hash and trying to use the <code>rasutl</code> command on a system with OpenSSL 1.0.2k-fips results in:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>$ base64 -d | openssl rsautl -inkey key -decrypt
+QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg==
+RSA operation error
+139719484266384:error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error:rsa_pk1.c:301:
+139719484266384:error:04065072:rsa routines:RSA_EAY_PRIVATE_DECRYPT:padding check failed:rsa_eay.c:643:</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>On a different system (using LibreSSL 2.6.5):</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>$ base64 -D | openssl rsautl -inkey key -decrypt
+QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg==
+RSA operation error
+4572378732:error:04FFF06B:rsa routines:CRYPTO_internal:block type is not 02:/BuildRoot/Library/Caches/com.apple.xbs/Sources/libressl/libressl-22.260.1/libressl-2.6/crypto/rsa/rsa_pk1.c:185:
+4572378732:error:04FFF072:rsa routines:CRYPTO_internal:padding check failed:/BuildRoot/Library/Caches/com.apple.xbs/Sources/libressl/libressl-22.260.1/libressl-2.6/crypto/rsa/rsa_eay.c:580:</code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:paragraph --></p>
+<p>The error message, as is the general trend, will only make sense after you know what the problem is. What they mean is that the required padding has the wrong content. RSA encryption pad is essential, to <a href="https://crypto.stackexchange.com/questions/3608/why-is-padding-used-for-rsa-encryption-given-that-it-is-not-a-block-cipher">quote</a>:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>For example RSA Encryption padding is randomized, ensuring that the same message encrypted multiple times looks different each time. It also avoids other weaknesses, such as encrypting the same message using different RSA keys leaking the message, or an attacker creating messages derived from some other ciphertexts.</p>
+<p><cite>From https://crypto.stackexchange.com/questions/3608/why-is-padding-used-for-rsa-encryption-given-that-it-is-not-a-block-cipher</cite></p></blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>You <a href="https://www.google.com/search?q=why+RSA+encryption+has+padding">can find other</a> more technical answers as well.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Multiple problems are afoot:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul>
+<li>OpenSSL uses SHA-1 as the default padding algorithm</li>
+<li>SHA-1 is considered vulnerable, though how that affects the RSA padding requirement is unclear to me.</li>
+<li><code>rsautl</code> has no options to change the padding algorithm</li>
+<li><code>rsautl</code> is considered deprecated and no docs say to use <code>pkeyutl</code> instead</li>
+<li>The replacement <code>pkeyutl</code> is of a more generic nature and options are passed through to the cipher through this more generic interface</li>
+<li>Nowhere in all the openssl documentation does it mention a way to set the padding algorithm.</li>
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>The above github question from 2014 covers all of these issues, but you have to be lucky enough to find it! In the end, this is how it's done:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>$ base64 -d | openssl pkeyutl -inkey key -decrypt -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256
+QJYpNJ5O1RkupwXVbaRr5Qrn8QghF4vl7MXpUyPI9IKqPbc8+VdLurUCdWlzztA1lmCCuppPXabGF1TETcJH3nq4PsxO43hq2Kb2EVZBad+bLjWQCOr8fXlZPUftJqbQAi/NmW0TTneI49EK3nBMIzq+XfLGvH9cnJgS9zqTtlamrXaio2Hvc+SfS8S2dyowRI82+WsSsX3nQbgVOdGY9ctq8sDnBvfUm0nd3ml0CrGaXqJf4hCHOSvH4CgSiBKzmK9wYQ3ZgpqBEJzQDFl+aU+hfOqryUB4dzYL/ceYGwWqkwg0vHncXasCGj+u7JH51V0n+SMfennBcyZI3uEmWg==
+The eagle flies at twilight</code></pre>
+<p><!-- /wp:code --></p>
+
+  </div><a class="u-url" href="/2019/11/a-little-webcrypto/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">A diary of problems</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">A diary of problems</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/danj3"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">danj3</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Dan&#39;s technology blog for development, systems, elixir, authentication, keycloak, ldap, kerberos, linux</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

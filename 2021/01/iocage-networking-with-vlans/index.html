@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>iocage networking with vlans | A diary of problems</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="iocage networking with vlans" />
+<meta name="author" content="Dan" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="I spent too much time figuring out why traffic was not routing with an iocage/jail configured to run on a VLAN to not write something about it. Here&#39;s the desired outcome: A BSD iocage/jail running on a TruNas core system using vnet with it&#39;s own IP address that&#39;s part of a VLAN (not the untagged network of the NAS system itself). The questions that arise are: What bridges to use Where to assign IP addresses for the NAS side How to configure iocage to attach to the plumbing correctly When it doesn&#39;t work, what to look for Starting with the base interface, bge0, when setting up (or before doing this work) the host IP address is assigned here. It can stay assigned directly to the interface, it doesn&#39;t seem to have any impact. Moving on to the VLAN (let&#39;s say the VLAN Tag is 52) you want to put the jail on, create a new interface in Network-&gt;Interfaces: Add Type: VLAN Name: VLAN52 Parent Interface: bge0 Vlan tag: 52 IP address: use an available IP on your 52 vlan that will be for the NAS system itself. This ,just be different from the IP you want to assign to the jail. Be sure to set the mask (/24 usually) to be correct for the IP segment. Apply Now create a bridge for this interface. A bridge is necessary for iocage to attach the vnet interfaces, think of it as a wiring point where the VLAN52 interface will connect with the jail vnet interface(s), there can be more than one jail/vnet attached to this bridge if you want them to all be on VLAN52. Create the bridge: Type: bridge Name: bridge52 (named after the VLAN it connects) Bridge members: vlan52 IP address: none, since vlan52 has an assigned IP and because assigning an IP for the NAS to the bridge didn&#39;t seem to work. Apply Now you&#39;ll need to go through &quot;Network Test&quot;, the IP you assigned to the vlan52 interface should be pingable now. You&#39;ll then need to &quot;Save&quot; the network changes. Running ifconfig after this process should show something that looks like this: bge0: flags=8943&lt;UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500 options=c019b&lt;RXCSUM,TXCSUM,VLAN_MTU,VLAN_HWTAGGING,VLAN_HWCSUM,TSO4,VLAN_HWTSO,LINKSTATE&gt; ether aa:aa:aa:aa:aa:aa inet 10.10.10.11 netmask 0xffffff00 broadcast 10.10.10.255 media: Ethernet autoselect (1000baseT &lt;full-duplex&gt;) status: active nd6 options=9&lt;PERFORMNUD,IFDISABLED&gt; vlan52: flags=8943&lt;UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500 options=80001&lt;RXCSUM,LINKSTATE&gt; ether aa:aa:aa:aa:aa:aa inet 10.10.52.11 netmask 0xffffff00 broadcast 10.10.52.255 groups: vlan vlan: 52 vlanpcp: 0 parent interface: bge0 media: Ethernet autoselect (1000baseT &lt;full-duplex&gt;) status: active nd6 options=9&lt;PERFORMNUD,IFDISABLED&gt; bridge52: flags=8843&lt;UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500 ether 02:42:03:1c:d1:34 id 00:00:00:00:00:00 priority 32768 hellotime 2 fwddelay 15 maxage 20 holdcnt 6 proto stp-rstp maxaddr 2000 timeout 1200 root id 00:00:00:00:00:00 priority 32768 ifcost 0 port 0 member: vlan52 flags=143&lt;LEARNING,DISCOVER,AUTOEDGE,AUTOPTP&gt; ifmaxaddr 0 port 4 priority 128 path cost 55 groups: bridge nd6 options=9&lt;PERFORMNUD,IFDISABLED&gt; iocage configuration The important point about the iocage configuration to understand, that is not obvious, is that without a few specific and simple steps, iocage will create a new bridge (bridge0) and attach the vnet&#39;s to that. If you do only have of the steps, it&#39;ll look sort of ok, but won&#39;t work. Create the jail, the first page of options is routine, name, type (clone), release (based on your system). Page 2 (Configure Networking): VNET: check vnet_default_interface: none (important!) ipv4 interface: vnet0 ipv4 address: set to the IP you&#39;ve chosen for the jail ipv4 default router: set if you what the jail to have a route off the vlan You can also use DHCP. At this point all you can do is review and submit. Once you&#39;ve done that, go back an edit the settings. This could be done using &#39;Advanced&#39; during creation also. Go to the network section and observe the setting for interfaces, it&#39;ll default to vnet0:bridge0. This needs to be changed to vnet0:bridge52, referring to the bridge we set up above. The important part here is that setting vnet_default_interface: none and interfaces: vnet0:bridge52 are the critical pair of settings that will properly put the jail onto bridge52 and create the right connectivity Problems So what happens if these get skipped. without `interfaces: `vnet0:bridge52` the jail will be put on the default bridge0 attached to bge0 without `vnet_default_interface: none` the vnet0 will be attached to bridge52, but iocage will also attach bge0 to bridge52 creating a senseless and non-functioning network. If this happens you&#39;ll see bge0 as a member of bridge52." />
+<meta property="og:description" content="I spent too much time figuring out why traffic was not routing with an iocage/jail configured to run on a VLAN to not write something about it. Here&#39;s the desired outcome: A BSD iocage/jail running on a TruNas core system using vnet with it&#39;s own IP address that&#39;s part of a VLAN (not the untagged network of the NAS system itself). The questions that arise are: What bridges to use Where to assign IP addresses for the NAS side How to configure iocage to attach to the plumbing correctly When it doesn&#39;t work, what to look for Starting with the base interface, bge0, when setting up (or before doing this work) the host IP address is assigned here. It can stay assigned directly to the interface, it doesn&#39;t seem to have any impact. Moving on to the VLAN (let&#39;s say the VLAN Tag is 52) you want to put the jail on, create a new interface in Network-&gt;Interfaces: Add Type: VLAN Name: VLAN52 Parent Interface: bge0 Vlan tag: 52 IP address: use an available IP on your 52 vlan that will be for the NAS system itself. This ,just be different from the IP you want to assign to the jail. Be sure to set the mask (/24 usually) to be correct for the IP segment. Apply Now create a bridge for this interface. A bridge is necessary for iocage to attach the vnet interfaces, think of it as a wiring point where the VLAN52 interface will connect with the jail vnet interface(s), there can be more than one jail/vnet attached to this bridge if you want them to all be on VLAN52. Create the bridge: Type: bridge Name: bridge52 (named after the VLAN it connects) Bridge members: vlan52 IP address: none, since vlan52 has an assigned IP and because assigning an IP for the NAS to the bridge didn&#39;t seem to work. Apply Now you&#39;ll need to go through &quot;Network Test&quot;, the IP you assigned to the vlan52 interface should be pingable now. You&#39;ll then need to &quot;Save&quot; the network changes. Running ifconfig after this process should show something that looks like this: bge0: flags=8943&lt;UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500 options=c019b&lt;RXCSUM,TXCSUM,VLAN_MTU,VLAN_HWTAGGING,VLAN_HWCSUM,TSO4,VLAN_HWTSO,LINKSTATE&gt; ether aa:aa:aa:aa:aa:aa inet 10.10.10.11 netmask 0xffffff00 broadcast 10.10.10.255 media: Ethernet autoselect (1000baseT &lt;full-duplex&gt;) status: active nd6 options=9&lt;PERFORMNUD,IFDISABLED&gt; vlan52: flags=8943&lt;UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500 options=80001&lt;RXCSUM,LINKSTATE&gt; ether aa:aa:aa:aa:aa:aa inet 10.10.52.11 netmask 0xffffff00 broadcast 10.10.52.255 groups: vlan vlan: 52 vlanpcp: 0 parent interface: bge0 media: Ethernet autoselect (1000baseT &lt;full-duplex&gt;) status: active nd6 options=9&lt;PERFORMNUD,IFDISABLED&gt; bridge52: flags=8843&lt;UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500 ether 02:42:03:1c:d1:34 id 00:00:00:00:00:00 priority 32768 hellotime 2 fwddelay 15 maxage 20 holdcnt 6 proto stp-rstp maxaddr 2000 timeout 1200 root id 00:00:00:00:00:00 priority 32768 ifcost 0 port 0 member: vlan52 flags=143&lt;LEARNING,DISCOVER,AUTOEDGE,AUTOPTP&gt; ifmaxaddr 0 port 4 priority 128 path cost 55 groups: bridge nd6 options=9&lt;PERFORMNUD,IFDISABLED&gt; iocage configuration The important point about the iocage configuration to understand, that is not obvious, is that without a few specific and simple steps, iocage will create a new bridge (bridge0) and attach the vnet&#39;s to that. If you do only have of the steps, it&#39;ll look sort of ok, but won&#39;t work. Create the jail, the first page of options is routine, name, type (clone), release (based on your system). Page 2 (Configure Networking): VNET: check vnet_default_interface: none (important!) ipv4 interface: vnet0 ipv4 address: set to the IP you&#39;ve chosen for the jail ipv4 default router: set if you what the jail to have a route off the vlan You can also use DHCP. At this point all you can do is review and submit. Once you&#39;ve done that, go back an edit the settings. This could be done using &#39;Advanced&#39; during creation also. Go to the network section and observe the setting for interfaces, it&#39;ll default to vnet0:bridge0. This needs to be changed to vnet0:bridge52, referring to the bridge we set up above. The important part here is that setting vnet_default_interface: none and interfaces: vnet0:bridge52 are the critical pair of settings that will properly put the jail onto bridge52 and create the right connectivity Problems So what happens if these get skipped. without `interfaces: `vnet0:bridge52` the jail will be put on the default bridge0 attached to bge0 without `vnet_default_interface: none` the vnet0 will be attached to bridge52, but iocage will also attach bge0 to bridge52 creating a senseless and non-functioning network. If this happens you&#39;ll see bge0 as a member of bridge52." />
+<link rel="canonical" href="http://localhost:4005/2021/01/iocage-networking-with-vlans/" />
+<meta property="og:url" content="http://localhost:4005/2021/01/iocage-networking-with-vlans/" />
+<meta property="og:site_name" content="A diary of problems" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-07T13:26:44-05:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="iocage networking with vlans" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dan"},"dateModified":"2021-01-07T13:26:44-05:00","datePublished":"2021-01-07T13:26:44-05:00","description":"I spent too much time figuring out why traffic was not routing with an iocage/jail configured to run on a VLAN to not write something about it. Here&#39;s the desired outcome: A BSD iocage/jail running on a TruNas core system using vnet with it&#39;s own IP address that&#39;s part of a VLAN (not the untagged network of the NAS system itself). The questions that arise are: What bridges to use Where to assign IP addresses for the NAS side How to configure iocage to attach to the plumbing correctly When it doesn&#39;t work, what to look for Starting with the base interface, bge0, when setting up (or before doing this work) the host IP address is assigned here. It can stay assigned directly to the interface, it doesn&#39;t seem to have any impact. Moving on to the VLAN (let&#39;s say the VLAN Tag is 52) you want to put the jail on, create a new interface in Network-&gt;Interfaces: Add Type: VLAN Name: VLAN52 Parent Interface: bge0 Vlan tag: 52 IP address: use an available IP on your 52 vlan that will be for the NAS system itself. This ,just be different from the IP you want to assign to the jail. Be sure to set the mask (/24 usually) to be correct for the IP segment. Apply Now create a bridge for this interface. A bridge is necessary for iocage to attach the vnet interfaces, think of it as a wiring point where the VLAN52 interface will connect with the jail vnet interface(s), there can be more than one jail/vnet attached to this bridge if you want them to all be on VLAN52. Create the bridge: Type: bridge Name: bridge52 (named after the VLAN it connects) Bridge members: vlan52 IP address: none, since vlan52 has an assigned IP and because assigning an IP for the NAS to the bridge didn&#39;t seem to work. Apply Now you&#39;ll need to go through &quot;Network Test&quot;, the IP you assigned to the vlan52 interface should be pingable now. You&#39;ll then need to &quot;Save&quot; the network changes. Running ifconfig after this process should show something that looks like this: bge0: flags=8943&lt;UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500 options=c019b&lt;RXCSUM,TXCSUM,VLAN_MTU,VLAN_HWTAGGING,VLAN_HWCSUM,TSO4,VLAN_HWTSO,LINKSTATE&gt; ether aa:aa:aa:aa:aa:aa inet 10.10.10.11 netmask 0xffffff00 broadcast 10.10.10.255 media: Ethernet autoselect (1000baseT &lt;full-duplex&gt;) status: active nd6 options=9&lt;PERFORMNUD,IFDISABLED&gt; vlan52: flags=8943&lt;UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500 options=80001&lt;RXCSUM,LINKSTATE&gt; ether aa:aa:aa:aa:aa:aa inet 10.10.52.11 netmask 0xffffff00 broadcast 10.10.52.255 groups: vlan vlan: 52 vlanpcp: 0 parent interface: bge0 media: Ethernet autoselect (1000baseT &lt;full-duplex&gt;) status: active nd6 options=9&lt;PERFORMNUD,IFDISABLED&gt; bridge52: flags=8843&lt;UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500 ether 02:42:03:1c:d1:34 id 00:00:00:00:00:00 priority 32768 hellotime 2 fwddelay 15 maxage 20 holdcnt 6 proto stp-rstp maxaddr 2000 timeout 1200 root id 00:00:00:00:00:00 priority 32768 ifcost 0 port 0 member: vlan52 flags=143&lt;LEARNING,DISCOVER,AUTOEDGE,AUTOPTP&gt; ifmaxaddr 0 port 4 priority 128 path cost 55 groups: bridge nd6 options=9&lt;PERFORMNUD,IFDISABLED&gt; iocage configuration The important point about the iocage configuration to understand, that is not obvious, is that without a few specific and simple steps, iocage will create a new bridge (bridge0) and attach the vnet&#39;s to that. If you do only have of the steps, it&#39;ll look sort of ok, but won&#39;t work. Create the jail, the first page of options is routine, name, type (clone), release (based on your system). Page 2 (Configure Networking): VNET: check vnet_default_interface: none (important!) ipv4 interface: vnet0 ipv4 address: set to the IP you&#39;ve chosen for the jail ipv4 default router: set if you what the jail to have a route off the vlan You can also use DHCP. At this point all you can do is review and submit. Once you&#39;ve done that, go back an edit the settings. This could be done using &#39;Advanced&#39; during creation also. Go to the network section and observe the setting for interfaces, it&#39;ll default to vnet0:bridge0. This needs to be changed to vnet0:bridge52, referring to the bridge we set up above. The important part here is that setting vnet_default_interface: none and interfaces: vnet0:bridge52 are the critical pair of settings that will properly put the jail onto bridge52 and create the right connectivity Problems So what happens if these get skipped. without `interfaces: `vnet0:bridge52` the jail will be put on the default bridge0 attached to bge0 without `vnet_default_interface: none` the vnet0 will be attached to bridge52, but iocage will also attach bge0 to bridge52 creating a senseless and non-functioning network. If this happens you&#39;ll see bge0 as a member of bridge52.","headline":"iocage networking with vlans","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4005/2021/01/iocage-networking-with-vlans/"},"url":"http://localhost:4005/2021/01/iocage-networking-with-vlans/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4005/feed.xml" title="A diary of problems" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">A diary of problems</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/privacy-policy/">Privacy Policy</a><a class="page-link" href="/company/">Triskelion, LLC</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">iocage networking with vlans</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-01-07T13:26:44-05:00" itemprop="datePublished">Jan 7, 2021
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Dan</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><!-- wp:paragraph --></p>
+<p>I spent too much time figuring out why traffic was not routing with an iocage/jail configured to run on a VLAN to not write something about it. Here's the desired outcome:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:quote --></p>
+<blockquote class="wp-block-quote"><p>A BSD iocage/jail running on a TruNas core system using vnet with it's own IP address that's part of a VLAN (not the untagged network of the NAS system itself).</p>
+</blockquote>
+<p><!-- /wp:quote --></p>
+<p><!-- wp:paragraph --></p>
+<p>The questions that arise are:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol>
+<li>What bridges to use</li>
+<li>Where to assign IP addresses for the NAS side</li>
+<li>How to configure iocage to attach to the plumbing correctly</li>
+<li>When it doesn't work, what to look for</li>
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:more --><br />
+<!--more--><br />
+<!-- /wp:more --></p>
+<p><!-- wp:paragraph --></p>
+<p>Starting with the base interface, bge0, when setting up (or before doing this work) the host IP address is assigned here. It can stay assigned directly to the interface, it doesn't seem to have any impact.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Moving on to the VLAN (let's say the VLAN Tag is 52) you want to put the jail on, create a new interface in Network-&gt;Interfaces:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol>
+<li>Add</li>
+<li>Type: VLAN</li>
+<li>Name: VLAN52</li>
+<li>Parent Interface: bge0</li>
+<li>Vlan tag: 52</li>
+<li>IP address: use an available IP on your 52 vlan that will be for the NAS system itself. This ,just be different from the IP you want to assign to the jail. Be sure to set the mask (/24 usually) to be correct for the IP segment.</li>
+<li>Apply</li>
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now create a bridge for this interface. A bridge is necessary for iocage to attach the vnet interfaces, think of it as a wiring point where the VLAN52 interface will connect with the jail vnet interface(s), there can be more than one jail/vnet attached to this bridge if you want them to all be on VLAN52. Create the bridge:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol>
+<li>Type: bridge</li>
+<li>Name: bridge52 (named after the VLAN it connects)</li>
+<li>Bridge members: vlan52</li>
+<li>IP address: none, since vlan52 has an assigned IP and because assigning an IP for the NAS to the bridge didn't seem to work.</li>
+<li>Apply</li>
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now you'll need to go through "Network Test", the IP you assigned to the vlan52 interface should be pingable now. You'll then need to "Save" the network changes. Running <code>ifconfig</code> after this process should show something that looks like this:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:code --></p>
+<pre class="wp-block-code"><code>bge0: flags=8943&lt;UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST> metric 0 mtu 1500
+	options=c019b&lt;RXCSUM,TXCSUM,VLAN_MTU,VLAN_HWTAGGING,VLAN_HWCSUM,TSO4,VLAN_HWTSO,LINKSTATE>
+	ether aa:aa:aa:aa:aa:aa
+	inet 10.10.10.11 netmask 0xffffff00 broadcast 10.10.10.255
+	media: Ethernet autoselect (1000baseT &lt;full-duplex>)
+	status: active
+	nd6 options=9&lt;PERFORMNUD,IFDISABLED>
+vlan52: flags=8943&lt;UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST> metric 0 mtu 1500
+	options=80001&lt;RXCSUM,LINKSTATE>
+	ether aa:aa:aa:aa:aa:aa
+	inet 10.10.52.11 netmask 0xffffff00 broadcast 10.10.52.255
+	groups: vlan
+	vlan: 52 vlanpcp: 0 parent interface: bge0
+	media: Ethernet autoselect (1000baseT &lt;full-duplex>)
+	status: active
+	nd6 options=9&lt;PERFORMNUD,IFDISABLED>
+bridge52: flags=8843&lt;UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST> metric 0 mtu 1500
+	ether 02:42:03:1c:d1:34
+	id 00:00:00:00:00:00 priority 32768 hellotime 2 fwddelay 15
+	maxage 20 holdcnt 6 proto stp-rstp maxaddr 2000 timeout 1200
+	root id 00:00:00:00:00:00 priority 32768 ifcost 0 port 0
+	member: vlan52 flags=143&lt;LEARNING,DISCOVER,AUTOEDGE,AUTOPTP>
+	        ifmaxaddr 0 port 4 priority 128 path cost 55
+	groups: bridge
+	nd6 options=9&lt;PERFORMNUD,IFDISABLED></code></pre>
+<p><!-- /wp:code --></p>
+<p><!-- wp:heading --></p>
+<h2>iocage configuration</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The important point about the iocage configuration to understand, that is not obvious, is that without a few specific and simple steps, iocage will create a new bridge (<code>bridge0</code>) and attach the vnet's to that. If you do only have of the steps, it'll look sort of ok, but won't work.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Create the jail, the first page of options is routine, name, type (clone), release (based on your system).  Page 2 (Configure Networking):</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol>
+<li>VNET: check</li>
+<li>vnet_default_interface: none (important!)</li>
+<li>ipv4 interface: vnet0</li>
+<li>ipv4 address: set to the IP you've chosen for the jail</li>
+<li>ipv4 default router: set if you what the jail to have a route off the vlan</li>
+</ol>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>You can also use DHCP. At this point all you can do is review and submit. Once you've done that, go back an edit the settings. This could be done using 'Advanced' during creation also. Go to the network section and observe the setting for interfaces, it'll default to <code>vnet0:bridge0</code>. This needs to be changed to <code>vnet0:bridge52</code>, referring to the bridge we set up above.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The important part here is that setting <code>vnet_default_interface: none</code> and <code>interfaces: vnet0:bridge52</code> are the critical pair of settings that will properly put the jail onto <code>bridge52</code> and create the right connectivity</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2>Problems</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>So what happens if these get skipped.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list {"ordered":true} --></p>
+<ol>
+<li>without `interfaces: `vnet0:bridge52` the jail will be put on the default bridge0 attached to bge0</li>
+<li>without `vnet_default_interface: none` the vnet0 will be attached to bridge52, but iocage will also attach bge0 to bridge52 creating a senseless and non-functioning network. If this happens you'll see bge0 as a member of bridge52.</li>
+</ol>
+<p><!-- /wp:list --></p>
+
+  </div><a class="u-url" href="/2021/01/iocage-networking-with-vlans/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">A diary of problems</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">A diary of problems</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/danj3"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">danj3</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Dan&#39;s technology blog for development, systems, elixir, authentication, keycloak, ldap, kerberos, linux</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

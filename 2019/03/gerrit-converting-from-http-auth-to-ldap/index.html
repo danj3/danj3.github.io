@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Gerrit: Converting from HTTP Auth to LDAP | A diary of problems</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="Gerrit: Converting from HTTP Auth to LDAP" />
+<meta name="author" content="Dan" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="While figuring out if we wanted to use Gerrit, which we do, I initially set it up to use HTTP authentication in the proxy in front of the Gerrit server. This was fine for the first step, but it&#39;s not desirable long term. I decided using LDAP was the right direction since we are hosting private repos and using a public openid provider would not help. Something about the HTTP users was not allowing authentication via LDAP. This is the conversion story. The way Gerrit does HTTP auth is it looks for a header to be set on the incoming request that tells it what the username is. It basically trusts the front end and this header and uses it to create the user when they show up if one doesn&#39;t already exist. On that first login, Gerrit will ask for an email address to associate the account with. When I converted over to LDAP, I could not login with the users that already existed via the Web interface. Interestingly, I could do everything using the SSH key already loaded into the account. The error log said: [HTTP-80] WARN com.google.gerrit.server.account.AccountManager : Email [EMAIL] is already assigned to account 1000001; cannot create external ID gerrit:[USER] with the same email for account 1000001. [HTTP-80] WARN com.google.gerrit.httpd.auth.ldap.Ldap LoginServlet : &#39;[USER]&#39; failed to sign in com.google.gerrit.server.account.AccountException: Email &#39;[EMAIL]&#39; in use by another account I found this rather vexing because it doesn&#39;t provide anywhere near enough information to understand the problem. I knew it was related to the way HTTP vs LDAP is authenticated, but not what. The docs are good when you know what you&#39;re looking for, but since no amount of search engine finesse was yielding a hint as to what the problem was, I had to go into system engineer mode. The version of Gerrit There&#39;s plenty of auth related chatter but it all predates 2.16, the version in question. It seems that around 2.15 user information was moved from reviewdb into the embedded NoteDB. So all the chatter about using SQL or gsql to address the situation was a dead end. External ID The one takeaway was the problem is all about external ids. I looked through the command line tools, but only found ls-groups, ls-projects, ls-members, and the very interesting create-account and ls-user-refs. The last one is worthwhile understanding. None of these CLI tools was helping. To understand more about external ids, I found that cloning All-Users, specifically the refs/meta/external-ids which is where in NoteDB the external ids are stored as individual files named by the SHA of the id, thus making impossible more than two entities having the same external id. Here&#39;s how that goes: clone the repo git clone gerrit:All-Users fetch the ref git fetch origin refs/meta/external-ids check out the FETCH_HEAD (which is the external-ids ref) git checkout -b extid FETCH_HEAD You can actually make changes here. You have to add an Access ref to do it, which is for the ref &quot;refs/meta/*&quot; and allow Push to Administrators. I messed around with some throw away users, though I don&#39;t suggest doing that on the gerrit you want to keep since users are permanent in gerrit as a data consistency precaution against removing a user that has activity associated with it. You can only disable a user. You can also see the contents of a user: git fetch origin refs/users/01/1000001 git checkout FETCH_HEAD The directory will now contain the account.config, authorized_keys (if any) and preferences.config which are GIT style config files with, unremarkably, the settings of the user. Again these can be changed here with a little work similar to above, but there&#39;s a better way... REST calls to the rescue The REST suite is much more capable than any of the other tools provided. They are simple enough to use once you sort out a few details. REST basics for Gerrit This can all be done with curl, nice. For a given user (admin) with a password (letmein), to look at a user&#39;s info: curl -u admin:letmein -X GET &#39;https://code-review/a/accounts/self&#39; )]}&#39; { &quot;_account_id&quot;: 1000014, &quot;name&quot;: &quot;admin&quot;, &quot;username&quot;: &quot;admin&quot; } At first I though the )]}&#39; was a bug, but it&#39;s intentional. In this case self is literally the calling user &#39;admin&#39;. That last path segment can be replaced with &#39;admin&#39; or &#39;1000014&#39; for the same result. The part we&#39;re really interested in is the external ids: curl -u admin:letmein -X GET \ &#39;https://code-review/a/accounts/admin/external.ids )]}&#39; [ { &quot;identity&quot;: &quot;gerrit:admin&quot;, &quot;trusted&quot;: true, &quot;can_delete&quot;: true }, { &quot;identity&quot;: &quot;username:admin&quot;, &quot;trusted&quot;: true } ] This is a user that works with LDAP. The way I created this user was to change [auth] from HTTP to LDAP, create an admin user in LDAP, then login through the browser. That worked with no problems. The issue was the users from the HTTP days. Here is one of those old users: )]}&#39; [ { &quot;identity&quot;: &quot;mailto:gituser@example.com&quot;, &quot;email_address&quot;: &quot;gituser@example.com&quot;, &quot;trusted&quot;: true, &quot;can_delete&quot;: true }, { &quot;identity&quot;: &quot;username:gituser&quot;, &quot;trusted&quot;: true }, { &quot;identity&quot;: &quot;gerrit:gituser&quot;, &quot;trusted&quot;: true, &quot;can_delete&quot;: true } ] In comparing the two users, the difference is the identity &quot;mailto:gituser@example.com&quot;, and this is the email provided during the first login via the HTTP proxy that was doing Basic Auth. And that&#39;s the problem. I wasn&#39;t 100% sure, but I&#39;d exhausted all options and looked at literally every bit of user information available in All-Users and the REST api (which told the same story, though the REST api provided it more clearly and safely). So, unless there was something hidden away saying user A authd by HTTP and B by LDAP, that one identity had to be it. Removing the culprit identity Now that I was comfortable using the REST interface, I examined how to delete an external identity. It involves two steps: create a json file containing a list of the external-ids to be removed, use curl to post them. My file, called data.json looks like this: [ &quot;gituser@example.com&quot; ] The curl to push this thing over the finish line is: curl --header &#39;Content-type: application/json&#39; \ -u admin:letmein \ -d @data.json \ -X POST \ &#39;https://code-review/a/accounts/gituser/external.ids:delete&#39; Conclusion Gerrit is a conceptually big system and it is remarkably flexible and powerful. It leverages GIT in ways I&#39;ve not seen before. The process of getting the system running and then trying to resolve this issue took more time than I&#39;d have liked. But, I appreciate the work and ideas that are in Gerrit and that it&#39;s worth the initial investment." />
+<meta property="og:description" content="While figuring out if we wanted to use Gerrit, which we do, I initially set it up to use HTTP authentication in the proxy in front of the Gerrit server. This was fine for the first step, but it&#39;s not desirable long term. I decided using LDAP was the right direction since we are hosting private repos and using a public openid provider would not help. Something about the HTTP users was not allowing authentication via LDAP. This is the conversion story. The way Gerrit does HTTP auth is it looks for a header to be set on the incoming request that tells it what the username is. It basically trusts the front end and this header and uses it to create the user when they show up if one doesn&#39;t already exist. On that first login, Gerrit will ask for an email address to associate the account with. When I converted over to LDAP, I could not login with the users that already existed via the Web interface. Interestingly, I could do everything using the SSH key already loaded into the account. The error log said: [HTTP-80] WARN com.google.gerrit.server.account.AccountManager : Email [EMAIL] is already assigned to account 1000001; cannot create external ID gerrit:[USER] with the same email for account 1000001. [HTTP-80] WARN com.google.gerrit.httpd.auth.ldap.Ldap LoginServlet : &#39;[USER]&#39; failed to sign in com.google.gerrit.server.account.AccountException: Email &#39;[EMAIL]&#39; in use by another account I found this rather vexing because it doesn&#39;t provide anywhere near enough information to understand the problem. I knew it was related to the way HTTP vs LDAP is authenticated, but not what. The docs are good when you know what you&#39;re looking for, but since no amount of search engine finesse was yielding a hint as to what the problem was, I had to go into system engineer mode. The version of Gerrit There&#39;s plenty of auth related chatter but it all predates 2.16, the version in question. It seems that around 2.15 user information was moved from reviewdb into the embedded NoteDB. So all the chatter about using SQL or gsql to address the situation was a dead end. External ID The one takeaway was the problem is all about external ids. I looked through the command line tools, but only found ls-groups, ls-projects, ls-members, and the very interesting create-account and ls-user-refs. The last one is worthwhile understanding. None of these CLI tools was helping. To understand more about external ids, I found that cloning All-Users, specifically the refs/meta/external-ids which is where in NoteDB the external ids are stored as individual files named by the SHA of the id, thus making impossible more than two entities having the same external id. Here&#39;s how that goes: clone the repo git clone gerrit:All-Users fetch the ref git fetch origin refs/meta/external-ids check out the FETCH_HEAD (which is the external-ids ref) git checkout -b extid FETCH_HEAD You can actually make changes here. You have to add an Access ref to do it, which is for the ref &quot;refs/meta/*&quot; and allow Push to Administrators. I messed around with some throw away users, though I don&#39;t suggest doing that on the gerrit you want to keep since users are permanent in gerrit as a data consistency precaution against removing a user that has activity associated with it. You can only disable a user. You can also see the contents of a user: git fetch origin refs/users/01/1000001 git checkout FETCH_HEAD The directory will now contain the account.config, authorized_keys (if any) and preferences.config which are GIT style config files with, unremarkably, the settings of the user. Again these can be changed here with a little work similar to above, but there&#39;s a better way... REST calls to the rescue The REST suite is much more capable than any of the other tools provided. They are simple enough to use once you sort out a few details. REST basics for Gerrit This can all be done with curl, nice. For a given user (admin) with a password (letmein), to look at a user&#39;s info: curl -u admin:letmein -X GET &#39;https://code-review/a/accounts/self&#39; )]}&#39; { &quot;_account_id&quot;: 1000014, &quot;name&quot;: &quot;admin&quot;, &quot;username&quot;: &quot;admin&quot; } At first I though the )]}&#39; was a bug, but it&#39;s intentional. In this case self is literally the calling user &#39;admin&#39;. That last path segment can be replaced with &#39;admin&#39; or &#39;1000014&#39; for the same result. The part we&#39;re really interested in is the external ids: curl -u admin:letmein -X GET \ &#39;https://code-review/a/accounts/admin/external.ids )]}&#39; [ { &quot;identity&quot;: &quot;gerrit:admin&quot;, &quot;trusted&quot;: true, &quot;can_delete&quot;: true }, { &quot;identity&quot;: &quot;username:admin&quot;, &quot;trusted&quot;: true } ] This is a user that works with LDAP. The way I created this user was to change [auth] from HTTP to LDAP, create an admin user in LDAP, then login through the browser. That worked with no problems. The issue was the users from the HTTP days. Here is one of those old users: )]}&#39; [ { &quot;identity&quot;: &quot;mailto:gituser@example.com&quot;, &quot;email_address&quot;: &quot;gituser@example.com&quot;, &quot;trusted&quot;: true, &quot;can_delete&quot;: true }, { &quot;identity&quot;: &quot;username:gituser&quot;, &quot;trusted&quot;: true }, { &quot;identity&quot;: &quot;gerrit:gituser&quot;, &quot;trusted&quot;: true, &quot;can_delete&quot;: true } ] In comparing the two users, the difference is the identity &quot;mailto:gituser@example.com&quot;, and this is the email provided during the first login via the HTTP proxy that was doing Basic Auth. And that&#39;s the problem. I wasn&#39;t 100% sure, but I&#39;d exhausted all options and looked at literally every bit of user information available in All-Users and the REST api (which told the same story, though the REST api provided it more clearly and safely). So, unless there was something hidden away saying user A authd by HTTP and B by LDAP, that one identity had to be it. Removing the culprit identity Now that I was comfortable using the REST interface, I examined how to delete an external identity. It involves two steps: create a json file containing a list of the external-ids to be removed, use curl to post them. My file, called data.json looks like this: [ &quot;gituser@example.com&quot; ] The curl to push this thing over the finish line is: curl --header &#39;Content-type: application/json&#39; \ -u admin:letmein \ -d @data.json \ -X POST \ &#39;https://code-review/a/accounts/gituser/external.ids:delete&#39; Conclusion Gerrit is a conceptually big system and it is remarkably flexible and powerful. It leverages GIT in ways I&#39;ve not seen before. The process of getting the system running and then trying to resolve this issue took more time than I&#39;d have liked. But, I appreciate the work and ideas that are in Gerrit and that it&#39;s worth the initial investment." />
+<link rel="canonical" href="http://localhost:4005/2019/03/gerrit-converting-from-http-auth-to-ldap/" />
+<meta property="og:url" content="http://localhost:4005/2019/03/gerrit-converting-from-http-auth-to-ldap/" />
+<meta property="og:site_name" content="A diary of problems" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-03-14T17:17:34-04:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Gerrit: Converting from HTTP Auth to LDAP" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dan"},"dateModified":"2019-03-14T17:17:34-04:00","datePublished":"2019-03-14T17:17:34-04:00","description":"While figuring out if we wanted to use Gerrit, which we do, I initially set it up to use HTTP authentication in the proxy in front of the Gerrit server. This was fine for the first step, but it&#39;s not desirable long term. I decided using LDAP was the right direction since we are hosting private repos and using a public openid provider would not help. Something about the HTTP users was not allowing authentication via LDAP. This is the conversion story. The way Gerrit does HTTP auth is it looks for a header to be set on the incoming request that tells it what the username is. It basically trusts the front end and this header and uses it to create the user when they show up if one doesn&#39;t already exist. On that first login, Gerrit will ask for an email address to associate the account with. When I converted over to LDAP, I could not login with the users that already existed via the Web interface. Interestingly, I could do everything using the SSH key already loaded into the account. The error log said: [HTTP-80] WARN com.google.gerrit.server.account.AccountManager : Email [EMAIL] is already assigned to account 1000001; cannot create external ID gerrit:[USER] with the same email for account 1000001. [HTTP-80] WARN com.google.gerrit.httpd.auth.ldap.Ldap LoginServlet : &#39;[USER]&#39; failed to sign in com.google.gerrit.server.account.AccountException: Email &#39;[EMAIL]&#39; in use by another account I found this rather vexing because it doesn&#39;t provide anywhere near enough information to understand the problem. I knew it was related to the way HTTP vs LDAP is authenticated, but not what. The docs are good when you know what you&#39;re looking for, but since no amount of search engine finesse was yielding a hint as to what the problem was, I had to go into system engineer mode. The version of Gerrit There&#39;s plenty of auth related chatter but it all predates 2.16, the version in question. It seems that around 2.15 user information was moved from reviewdb into the embedded NoteDB. So all the chatter about using SQL or gsql to address the situation was a dead end. External ID The one takeaway was the problem is all about external ids. I looked through the command line tools, but only found ls-groups, ls-projects, ls-members, and the very interesting create-account and ls-user-refs. The last one is worthwhile understanding. None of these CLI tools was helping. To understand more about external ids, I found that cloning All-Users, specifically the refs/meta/external-ids which is where in NoteDB the external ids are stored as individual files named by the SHA of the id, thus making impossible more than two entities having the same external id. Here&#39;s how that goes: clone the repo git clone gerrit:All-Users fetch the ref git fetch origin refs/meta/external-ids check out the FETCH_HEAD (which is the external-ids ref) git checkout -b extid FETCH_HEAD You can actually make changes here. You have to add an Access ref to do it, which is for the ref &quot;refs/meta/*&quot; and allow Push to Administrators. I messed around with some throw away users, though I don&#39;t suggest doing that on the gerrit you want to keep since users are permanent in gerrit as a data consistency precaution against removing a user that has activity associated with it. You can only disable a user. You can also see the contents of a user: git fetch origin refs/users/01/1000001 git checkout FETCH_HEAD The directory will now contain the account.config, authorized_keys (if any) and preferences.config which are GIT style config files with, unremarkably, the settings of the user. Again these can be changed here with a little work similar to above, but there&#39;s a better way... REST calls to the rescue The REST suite is much more capable than any of the other tools provided. They are simple enough to use once you sort out a few details. REST basics for Gerrit This can all be done with curl, nice. For a given user (admin) with a password (letmein), to look at a user&#39;s info: curl -u admin:letmein -X GET &#39;https://code-review/a/accounts/self&#39; )]}&#39; { &quot;_account_id&quot;: 1000014, &quot;name&quot;: &quot;admin&quot;, &quot;username&quot;: &quot;admin&quot; } At first I though the )]}&#39; was a bug, but it&#39;s intentional. In this case self is literally the calling user &#39;admin&#39;. That last path segment can be replaced with &#39;admin&#39; or &#39;1000014&#39; for the same result. The part we&#39;re really interested in is the external ids: curl -u admin:letmein -X GET \\ &#39;https://code-review/a/accounts/admin/external.ids )]}&#39; [ { &quot;identity&quot;: &quot;gerrit:admin&quot;, &quot;trusted&quot;: true, &quot;can_delete&quot;: true }, { &quot;identity&quot;: &quot;username:admin&quot;, &quot;trusted&quot;: true } ] This is a user that works with LDAP. The way I created this user was to change [auth] from HTTP to LDAP, create an admin user in LDAP, then login through the browser. That worked with no problems. The issue was the users from the HTTP days. Here is one of those old users: )]}&#39; [ { &quot;identity&quot;: &quot;mailto:gituser@example.com&quot;, &quot;email_address&quot;: &quot;gituser@example.com&quot;, &quot;trusted&quot;: true, &quot;can_delete&quot;: true }, { &quot;identity&quot;: &quot;username:gituser&quot;, &quot;trusted&quot;: true }, { &quot;identity&quot;: &quot;gerrit:gituser&quot;, &quot;trusted&quot;: true, &quot;can_delete&quot;: true } ] In comparing the two users, the difference is the identity &quot;mailto:gituser@example.com&quot;, and this is the email provided during the first login via the HTTP proxy that was doing Basic Auth. And that&#39;s the problem. I wasn&#39;t 100% sure, but I&#39;d exhausted all options and looked at literally every bit of user information available in All-Users and the REST api (which told the same story, though the REST api provided it more clearly and safely). So, unless there was something hidden away saying user A authd by HTTP and B by LDAP, that one identity had to be it. Removing the culprit identity Now that I was comfortable using the REST interface, I examined how to delete an external identity. It involves two steps: create a json file containing a list of the external-ids to be removed, use curl to post them. My file, called data.json looks like this: [ &quot;gituser@example.com&quot; ] The curl to push this thing over the finish line is: curl --header &#39;Content-type: application/json&#39; \\ -u admin:letmein \\ -d @data.json \\ -X POST \\ &#39;https://code-review/a/accounts/gituser/external.ids:delete&#39; Conclusion Gerrit is a conceptually big system and it is remarkably flexible and powerful. It leverages GIT in ways I&#39;ve not seen before. The process of getting the system running and then trying to resolve this issue took more time than I&#39;d have liked. But, I appreciate the work and ideas that are in Gerrit and that it&#39;s worth the initial investment.","headline":"Gerrit: Converting from HTTP Auth to LDAP","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4005/2019/03/gerrit-converting-from-http-auth-to-ldap/"},"url":"http://localhost:4005/2019/03/gerrit-converting-from-http-auth-to-ldap/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4005/feed.xml" title="A diary of problems" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">A diary of problems</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/privacy-policy/">Privacy Policy</a><a class="page-link" href="/company/">Triskelion, LLC</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Gerrit: Converting from HTTP Auth to LDAP</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2019-03-14T17:17:34-04:00" itemprop="datePublished">Mar 14, 2019
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Dan</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><!-- wp:paragraph --></p>
+<p>While figuring out if we wanted to use Gerrit, which we do, I initially set it up to use HTTP authentication in the proxy in front of the Gerrit server. This was fine for the first step, but it's not desirable long term. I decided using LDAP was the right direction since we are hosting private repos and using a public openid provider would not help. Something about the HTTP users was not allowing authentication via LDAP. This is the conversion story.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:more --><br />
+<!--more--><br />
+<!-- /wp:more --></p>
+<p><!-- wp:paragraph --></p>
+<p>The way Gerrit does HTTP auth is it looks for a header to be set on the incoming request that tells it what the username is. It basically trusts the front end and this header and uses it to create the user when they show up if one doesn't already exist. On that first login, Gerrit will ask for an email address to associate the account with.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>When I converted over to LDAP, I could not login with the users that already existed via the Web interface. Interestingly, I could do everything using the SSH key already loaded into the account. The error log said:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:syntaxhighlighter/code --></p>
+<pre class="wp-block-syntaxhighlighter-code">[HTTP-80] WARN  com.google.gerrit.server.account.AccountManager : Email [EMAIL] is already assigned to account 1000001; cannot
+create external ID gerrit:[USER] with the same email for account 1000001.
+[HTTP-80] WARN com.google.gerrit.httpd.auth.ldap.Ldap
+LoginServlet : '[USER]' failed to sign in com.google.gerrit.server.account.AccountException: Email '[EMAIL]' in use by another account</pre>
+<p><!-- /wp:syntaxhighlighter/code --></p>
+<p><!-- wp:paragraph --></p>
+<p>I found this rather vexing because it doesn't provide anywhere near enough information to understand the problem. I knew it was related to the <em>way</em> HTTP vs LDAP is authenticated, but not <em>what</em>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The docs are good when you know what you're looking for, but since no amount of search engine finesse was yielding a hint as to what the problem was, I had to go into system engineer mode.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2>The version of Gerrit</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>There's plenty of auth related chatter but it all predates 2.16, the version in question. It seems that <a href="https://gerrit-documentation.storage.googleapis.com/Documentation/2.16.7/note-db.html">around 2.15</a> user information was moved from <strong>reviewdb</strong> into the embedded <strong>NoteDB</strong>. So all the <a href="https://groups.google.com/forum/#!msg/repo-discuss/lMsd0MW95Uw/xq-BGKISLlcJ">chatter about using SQL</a> or gsql to address the situation was a dead end.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2>External ID</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The one takeaway was the problem is all about <a href="https://www.gerritcodereview.com/config-accounts.html#external-ids">external ids</a>. I looked through the <a href="https://gerrit-documentation.storage.googleapis.com/Documentation/2.16.7/cmd-index.html">command line tools</a>, but only found <em>ls-groups, ls-projects, ls-members,</em> and the very interesting <em>create-account</em> and <em>ls-user-refs</em>. The last one is worthwhile understanding. None of these CLI tools was helping.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>To understand more about external ids, I found that cloning All-Users, specifically the <strong>refs/meta/external-ids</strong> which is <em>where</em> in NoteDB the external ids are stored as individual files named by the SHA of the id, thus making impossible more than two entities having the same external id.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Here's how that goes:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul>
+<li>clone the repo
+<ul>
+<li><code>git clone gerrit:All-Users</code></li>
+</ul>
+</li>
+<li>fetch the ref
+<ul>
+<li><code>git fetch origin refs/meta/external-ids</code></li>
+</ul>
+</li>
+<li>check out the FETCH_HEAD (which is the external-ids ref)
+<ul>
+<li><code>git checkout -b extid FETCH_HEAD</code></li>
+</ul>
+</li>
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>You can <em>actually make</em> changes here. You have to add an Access ref to do it, which is for the ref "refs/meta/*" and allow Push to Administrators. I messed around with some throw away users, though I don't suggest doing that on the gerrit you want to keep since users are permanent in gerrit as a data consistency precaution against removing a user that has activity associated with it. You can only disable a user.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>You can also see the contents of a user:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:syntaxhighlighter/code --></p>
+<pre class="wp-block-syntaxhighlighter-code">git fetch origin refs/users/01/1000001
+git checkout FETCH_HEAD</pre>
+<p><!-- /wp:syntaxhighlighter/code --></p>
+<p><!-- wp:paragraph --></p>
+<p>The directory will now contain the account.config, authorized_keys (if any) and preferences.config which are GIT style config files with, unremarkably, the settings of the user. Again these can be changed here with a little work similar to above, but there's a better way...</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2>REST calls to the rescue</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>The <a href="https://gerrit-documentation.storage.googleapis.com/Documentation/2.16.7/rest-api.html">REST suite</a> is much more capable than any of the other tools provided. They are simple enough to use once you sort out a few details.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading {"level":3} --></p>
+<h3>REST basics for Gerrit</h3>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>This can all be done with curl, nice. For a given user (admin) with a password (letmein), to look at a user's info:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:syntaxhighlighter/code --></p>
+<pre class="wp-block-syntaxhighlighter-code">curl -u admin:letmein -X GET 'https://code-review/a/accounts/self'
+)]}'
+{
+  "_account_id": 1000014,
+  "name": "admin",
+  "username": "admin"
+}</pre>
+<p><!-- /wp:syntaxhighlighter/code --></p>
+<p><!-- wp:paragraph --></p>
+<p>At first I though the )]}' was a bug, but it's intentional. In this case self is literally the calling user 'admin'. That last path segment can be replaced with 'admin' or '1000014' for the same result.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The part we're really interested in is the external ids:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:syntaxhighlighter/code --></p>
+<pre class="wp-block-syntaxhighlighter-code">curl -u admin:letmein -X GET \
+ 'https://code-review/a/accounts/admin/external.ids
+)]}'
+[
+  {
+    "identity": "gerrit:admin",
+    "trusted": true,
+    "can_delete": true
+  },
+  {
+    "identity": "username:admin",
+    "trusted": true
+  }
+]</pre>
+<p><!-- /wp:syntaxhighlighter/code --></p>
+<p><!-- wp:paragraph --></p>
+<p>This is a user that works with LDAP. The way I created this user was to change [auth] from HTTP to LDAP, create an admin user in LDAP, then login through the browser. That worked with no problems. The issue was the users from the HTTP days. Here is one of those old users:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:syntaxhighlighter/code --></p>
+<pre class="wp-block-syntaxhighlighter-code">)]}'
+[
+  {
+    "identity": "mailto:gituser@example.com",
+    "email_address": "gituser@example.com",
+    "trusted": true,
+    "can_delete": true
+  },
+  {
+    "identity": "username:gituser",
+    "trusted": true
+  },
+  {
+    "identity": "gerrit:gituser",
+    "trusted": true,
+    "can_delete": true
+  }
+]</pre>
+<p><!-- /wp:syntaxhighlighter/code --></p>
+<p><!-- wp:paragraph --></p>
+<p>In comparing the two users, the difference is the identity "mailto:gituser@example.com", and this is the email provided during the first login via the HTTP proxy that was doing Basic Auth. And that's the problem. I wasn't 100% sure, but I'd exhausted all options and looked at literally every bit of user information available in All-Users and the REST api (which told the same story, though the REST api provided it more clearly and safely). So, unless there was something hidden away saying user A authd by HTTP and B by LDAP, that one identity had to be it.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:heading --></p>
+<h2>Removing the culprit identity</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Now that I was comfortable using the REST interface, I examined how to <a href="https://gerrit-documentation.storage.googleapis.com/Documentation/2.16.7/rest-api-accounts.html#delete-account-external-ids">delete an external identity.</a> It involves two steps: create a json file containing a list of the external-ids to be removed, use curl to post them. My file, called data.json looks like this:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:syntaxhighlighter/code --></p>
+<pre class="wp-block-syntaxhighlighter-code">[ "gituser@example.com" ]</pre>
+<p><!-- /wp:syntaxhighlighter/code --></p>
+<p><!-- wp:paragraph --></p>
+<p>The curl to push this thing over the finish line is:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:syntaxhighlighter/code --></p>
+<pre class="wp-block-syntaxhighlighter-code">curl --header 'Content-type: application/json' \
+ -u admin:letmein \
+ -d @data.json \
+ -X POST \
+ 'https://code-review/a/accounts/gituser/external.ids:delete'</pre>
+<p><!-- /wp:syntaxhighlighter/code --></p>
+<p><!-- wp:heading --></p>
+<h2>Conclusion</h2>
+<p><!-- /wp:heading --></p>
+<p><!-- wp:paragraph --></p>
+<p>Gerrit is a conceptually big system and it is remarkably flexible and powerful. It leverages GIT in ways I've not seen before. The process of getting the system running and then trying to resolve this issue took more time than I'd have liked. But, I appreciate the work and ideas that are in Gerrit and that it's worth the initial investment.</p>
+<p><!-- /wp:paragraph --></p>
+
+  </div><a class="u-url" href="/2019/03/gerrit-converting-from-http-auth-to-ldap/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">A diary of problems</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">A diary of problems</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/danj3"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">danj3</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Dan&#39;s technology blog for development, systems, elixir, authentication, keycloak, ldap, kerberos, linux</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
