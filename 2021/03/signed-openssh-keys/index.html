@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Signed OpenSSH keys | A diary of problems</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="Signed OpenSSH keys" />
+<meta name="author" content="Dan" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="OpenSSH supports the signing of public keys by a certificate authority. This feature is the gateway to a powerful set of access controls limiting access by users, time, principals and hosts. Articles can be found on the topic, here are a few: Facebook engineering wrote in 2016 about their approach and what it enables: Scalable and secure access with SSH Hosaka wrote about it in 2020 and makes reference to the above FB post in the article Creating a PKI for OpenSSH. The key entry point is in the ssh-keygen man page: CERTIFICATES      ssh-keygen supports signing of keys to produce certificates that may be used for user or host authentication.  Certificates consist of a public key, some identity information, zero or more principal (user or host) names and a set of options that are signed by a Certification Authority (CA) key.  Clients or servers may then trust only the CA key and verify its signature on a certificate rather than trusting many user/host keys.  Note that OpenSSH certificates are a different, and much simpler, format to the X.509 certificates used in ssl(8). Some points of interest: Users do not need to pre-seed .ssh/authorized_keys if their pub key is signed by a trusted CA Keys can be revoked. Although the mechanics of this are left to the SA&#39;s devices A signed key can be limited in usable scope to specific set of hosts and specific sets of destination users A signed key has a specific usable duration, i.e. it expires. This alone adds a great deal of security and requires interaction with the CA for issuance/renewal creating a point of control. Some details on how to do this are left out. How to create a secure issuance mechanism for a CA to do its actual work. The FB post alludes to an process that is invoked automatically for a user when the log in to a bastion host, but leaves the details of that out. The key-revocation mechanism is probably dependent on some kind of cron mechanism. How to manage (what gets issued) the who has access to what is out of scope and is likely dependent upon LDAP or other identity/authentication system of control. These are great starting points on this topic and worth considering if not for the possibilities it offers if not for how to solve the few implementation issues to make it really work." />
+<meta property="og:description" content="OpenSSH supports the signing of public keys by a certificate authority. This feature is the gateway to a powerful set of access controls limiting access by users, time, principals and hosts. Articles can be found on the topic, here are a few: Facebook engineering wrote in 2016 about their approach and what it enables: Scalable and secure access with SSH Hosaka wrote about it in 2020 and makes reference to the above FB post in the article Creating a PKI for OpenSSH. The key entry point is in the ssh-keygen man page: CERTIFICATES      ssh-keygen supports signing of keys to produce certificates that may be used for user or host authentication.  Certificates consist of a public key, some identity information, zero or more principal (user or host) names and a set of options that are signed by a Certification Authority (CA) key.  Clients or servers may then trust only the CA key and verify its signature on a certificate rather than trusting many user/host keys.  Note that OpenSSH certificates are a different, and much simpler, format to the X.509 certificates used in ssl(8). Some points of interest: Users do not need to pre-seed .ssh/authorized_keys if their pub key is signed by a trusted CA Keys can be revoked. Although the mechanics of this are left to the SA&#39;s devices A signed key can be limited in usable scope to specific set of hosts and specific sets of destination users A signed key has a specific usable duration, i.e. it expires. This alone adds a great deal of security and requires interaction with the CA for issuance/renewal creating a point of control. Some details on how to do this are left out. How to create a secure issuance mechanism for a CA to do its actual work. The FB post alludes to an process that is invoked automatically for a user when the log in to a bastion host, but leaves the details of that out. The key-revocation mechanism is probably dependent on some kind of cron mechanism. How to manage (what gets issued) the who has access to what is out of scope and is likely dependent upon LDAP or other identity/authentication system of control. These are great starting points on this topic and worth considering if not for the possibilities it offers if not for how to solve the few implementation issues to make it really work." />
+<link rel="canonical" href="http://localhost:4005/2021/03/signed-openssh-keys/" />
+<meta property="og:url" content="http://localhost:4005/2021/03/signed-openssh-keys/" />
+<meta property="og:site_name" content="A diary of problems" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-03-26T11:47:23-04:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Signed OpenSSH keys" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dan"},"dateModified":"2021-03-26T11:47:23-04:00","datePublished":"2021-03-26T11:47:23-04:00","description":"OpenSSH supports the signing of public keys by a certificate authority. This feature is the gateway to a powerful set of access controls limiting access by users, time, principals and hosts. Articles can be found on the topic, here are a few: Facebook engineering wrote in 2016 about their approach and what it enables: Scalable and secure access with SSH Hosaka wrote about it in 2020 and makes reference to the above FB post in the article Creating a PKI for OpenSSH. The key entry point is in the ssh-keygen man page: CERTIFICATES      ssh-keygen supports signing of keys to produce certificates that may be used for user or host authentication.  Certificates consist of a public key, some identity information, zero or more principal (user or host) names and a set of options that are signed by a Certification Authority (CA) key.  Clients or servers may then trust only the CA key and verify its signature on a certificate rather than trusting many user/host keys.  Note that OpenSSH certificates are a different, and much simpler, format to the X.509 certificates used in ssl(8). Some points of interest: Users do not need to pre-seed .ssh/authorized_keys if their pub key is signed by a trusted CA Keys can be revoked. Although the mechanics of this are left to the SA&#39;s devices A signed key can be limited in usable scope to specific set of hosts and specific sets of destination users A signed key has a specific usable duration, i.e. it expires. This alone adds a great deal of security and requires interaction with the CA for issuance/renewal creating a point of control. Some details on how to do this are left out. How to create a secure issuance mechanism for a CA to do its actual work. The FB post alludes to an process that is invoked automatically for a user when the log in to a bastion host, but leaves the details of that out. The key-revocation mechanism is probably dependent on some kind of cron mechanism. How to manage (what gets issued) the who has access to what is out of scope and is likely dependent upon LDAP or other identity/authentication system of control. These are great starting points on this topic and worth considering if not for the possibilities it offers if not for how to solve the few implementation issues to make it really work.","headline":"Signed OpenSSH keys","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4005/2021/03/signed-openssh-keys/"},"url":"http://localhost:4005/2021/03/signed-openssh-keys/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4005/feed.xml" title="A diary of problems" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">A diary of problems</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/privacy-policy/">Privacy Policy</a><a class="page-link" href="/company/">Triskelion, LLC</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Signed OpenSSH keys</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-03-26T11:47:23-04:00" itemprop="datePublished">Mar 26, 2021
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Dan</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><!-- wp:paragraph --></p>
+<p>OpenSSH supports the signing of public keys by a certificate authority. This feature is the gateway to a powerful set of access controls limiting access by users, time, principals and hosts. Articles can be found  on the topic, here are a few:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:more --><br />
+<!--more--><br />
+<!-- /wp:more --></p>
+<p><!-- wp:paragraph --></p>
+<p>Facebook engineering wrote in 2016 about their approach and what it enables: <a href="https://engineering.fb.com/2016/09/12/security/scalable-and-secure-access-with-ssh/">Scalable and secure access with SSH</a></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Hosaka wrote about it in 2020 and makes reference to the above FB post in the article <a href="https://hosakacorp.net/p/ssh-pki.html">Creating a PKI for OpenSSH</a>.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>The key entry point is in the <code>ssh-keygen</code> man page:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p><strong>CERT</strong><strong>IFICATES</strong></p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>     <strong>ssh-keygen</strong> supports signing of keys to produce certificates that may be used for user or host authentication.  Certificates consist of a public key, some identity information, zero or more principal (user or host) names and a set of options that are signed by a Certification Authority (CA) key.  Clients or servers may then trust only the CA key and verify its signature on a certificate rather than trusting many user/host keys.  Note that OpenSSH certificates are a different, and much simpler, format to the X.509 certificates used in ssl(8).</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>Some points of interest:</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:list --></p>
+<ul>
+<li>Users do not need to pre-seed .ssh/authorized_keys if their pub key is signed by a trusted CA</li>
+<li>Keys can be revoked. Although the mechanics of this are left to the SA's devices</li>
+<li>A signed key can be limited in usable scope to specific set of hosts and specific sets of destination users</li>
+<li>A signed key has a specific usable duration, i.e. it expires. This alone adds a great deal of security and requires interaction with the CA for issuance/renewal creating a point of control.</li>
+</ul>
+<p><!-- /wp:list --></p>
+<p><!-- wp:paragraph --></p>
+<p>Some details on how to do this are left out. How to create a secure issuance mechanism for a CA to do its actual work. The FB post alludes to an process that is invoked automatically for a user when the log in to a bastion host, but leaves the details of that out. The key-revocation mechanism is probably dependent on some kind of cron mechanism. How to manage (what gets issued) the who has access to what is out of scope and is likely dependent upon LDAP or other identity/authentication system of control.</p>
+<p><!-- /wp:paragraph --></p>
+<p><!-- wp:paragraph --></p>
+<p>These are great starting points on this topic and worth considering if not for the possibilities it offers if not for how to solve the few implementation issues to make it really work.</p>
+<p><!-- /wp:paragraph --></p>
+
+  </div><a class="u-url" href="/2021/03/signed-openssh-keys/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">A diary of problems</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">A diary of problems</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/danj3"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">danj3</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Dan&#39;s technology blog for development, systems, elixir, authentication, keycloak, ldap, kerberos, linux</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
