@@ -1,11 +1,215 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="https://danj3.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://danj3.github.io/" rel="alternate" type="text/html" /><updated>2024-01-21T12:30:19-05:00</updated><id>https://danj3.github.io/feed.xml</id><title type="html">A mundane paradise</title><subtitle>Technology blog for software, systems, elixir, authentication, and security</subtitle><entry><title type="html">Publishing Jetenv to HEX</title><link href="https://danj3.github.io/2024/01/announcing-jetenv/" rel="alternate" type="text/html" title="Publishing Jetenv to HEX" /><published>2024-01-19T10:00:00-05:00</published><updated>2024-01-19T10:00:00-05:00</updated><id>https://danj3.github.io/2024/01/announcing-jetenv</id><content type="html" xml:base="https://danj3.github.io/2024/01/announcing-jetenv/">&lt;p&gt;Announcing that today a new package &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Jetenv&lt;/code&gt; will be published to &lt;a href=&quot;https://hex.pm/jetenv&quot;&gt;hex&lt;/a&gt;.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="https://danj3.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://danj3.github.io/" rel="alternate" type="text/html" /><updated>2024-01-29T23:50:57-05:00</updated><id>https://danj3.github.io/feed.xml</id><title type="html">Unravel digital illusion</title><subtitle>investigating ideas and obstacles in software and systems with special attention on the BEAM (elixir/erlang), authentication, and security.</subtitle><author><name>Dan Janowski</name></author><entry><title type="html">function spec from anonymous function type spec</title><link href="https://danj3.github.io/2024/01/erlang-function-typespec/" rel="alternate" type="text/html" title="function spec from anonymous function type spec" /><published>2024-01-29T10:00:00-05:00</published><updated>2024-01-29T10:00:00-05:00</updated><id>https://danj3.github.io/2024/01/erlang-function-typespec</id><content type="html" xml:base="https://danj3.github.io/2024/01/erlang-function-typespec/">&lt;p&gt;A possible OTP feature request: syntax for declaring a function spec using a typespec for an anonymous function.
+&lt;!--more--&gt;&lt;/p&gt;
+
+&lt;p&gt;If I define a type specification for an anonymous function, I would
+like to be able to use that as a specification for a named function.
+I believe behaviours convey the signatures of implemented
+callbacks. If the contract is not defined this way, it would
+be helpful to not repeat/reproduce the signature in all places.
+Instead use the same named type as the spec signature.&lt;/p&gt;
+
+&lt;p&gt;This could look something like:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;-module(mod).
+-type foo_fun :: (binary() -&amp;gt; boolean()).
+-export_type([foo_fun/0]).
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Another module:&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;-spec foo as mod:foo_fun.
+foo(Str) -&amp;gt; false.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Dan Janowski</name></author><category term="erlang" /><category term="elixir" /><category term="erlang" /><category term="elixir" /><summary type="html">A possible OTP feature request: syntax for declaring a function spec using a typespec for an anonymous function.</summary></entry><entry><title type="html">No plural tables</title><link href="https://danj3.github.io/2024/01/plural-argument/" rel="alternate" type="text/html" title="No plural tables" /><published>2024-01-29T00:00:00-05:00</published><updated>2024-01-29T00:00:00-05:00</updated><id>https://danj3.github.io/2024/01/plural-argument</id><content type="html" xml:base="https://danj3.github.io/2024/01/plural-argument/">&lt;p&gt;Some opinionated database frameworks have made a point of
+using pluralized names for database tables. I disagree with this opinion and will explain why.&lt;/p&gt;
+
+&lt;!--more--&gt;
+
+&lt;p&gt;A database table is regarded as a type (or class) by a variety of
+programming language frameworks. What that means is a type represents
+an entity, be it a visitor, a product, or an article. Concretely this
+means a table contains a collection of articles, and that’s where the
+plural path derives its logic. However, in code the thing you get from
+a given table is a singular thing. Thus an ‘article’ type should map to
+an ‘article’ table, that being the type it stores. It doesn’t store an
+‘articles’ type.&lt;/p&gt;
+
+&lt;p&gt;By maintaining direct parity between the type ‘article’ and the table
+‘article’, there is no morphology required to determine the name of a
+table for a thing, they are the same.
+This plays out badly for pluralization because plurals for many
+things are not so simple as adding an ‘s’ suffix, or worse, some
+plurals are the &lt;strong&gt;same&lt;/strong&gt; as the singular. A long time ago I found a
+module in ActiveRecord (or a reference to it) of logic just to
+deal with the English language morphology of pluralization. While
+that was a tidy accomplishment, it seems like a horrible waste of
+time and effort for an opinion that yields questionable, or in my
+opinion negative, value.&lt;/p&gt;
+
+&lt;p&gt;I say negative value because the programmer in observing this
+pluralization has to keep track of how tables are named differently
+than the types being dealt with in the code. Maybe directly touching
+the database isn’t so frequent, but that makes a greater case
+for having it all be exactly the same.&lt;/p&gt;</content><author><name>Dan Janowski</name></author><category term="database" /><category term="opinion" /><summary type="html">Some opinionated database frameworks have made a point of using pluralized names for database tables. I disagree with this opinion and will explain why.</summary></entry><entry><title type="html">First deployment at Hetzner with CDKTF</title><link href="https://danj3.github.io/2024/01/hetzner-with-cdktf/" rel="alternate" type="text/html" title="First deployment at Hetzner with CDKTF" /><published>2024-01-25T10:00:00-05:00</published><updated>2024-01-25T10:00:00-05:00</updated><id>https://danj3.github.io/2024/01/hetzner-with-cdktf</id><content type="html" xml:base="https://danj3.github.io/2024/01/hetzner-with-cdktf/">&lt;p&gt;Having a small project to deploy at Hetzner, I decided
+to try using CDK for the first time outside of AWS. Hashicorp’s
+CDKTF rolls AWS CDK with Terraform for doing IAC with
+the many TF providers available.&lt;/p&gt;
+
+&lt;h1 id=&quot;getting-started&quot;&gt;Getting started&lt;/h1&gt;
+
+&lt;p&gt;I followed the install instructions for cdktf itself with
+no issues. I used asdf to install nodejs 20.11.0. cdktf init 
+with typescript as the language.&lt;/p&gt;
+
+&lt;h2 id=&quot;authentication&quot;&gt;Authentication&lt;/h2&gt;
+
+&lt;p&gt;A bit of clicking around in Hetzner’s screens leads to the API
+key tool where a bearer token string can be generated.
+For direct API use, which I tried to make sure it was right
+it is a standard &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;authorization: bearer &amp;lt;token&amp;gt;&lt;/code&gt; http header.
+I wrote the plain token to a file, which is useful later.&lt;/p&gt;
+
+&lt;h1 id=&quot;the-stack&quot;&gt;The Stack&lt;/h1&gt;
+
+&lt;p&gt;Install the hcloud/provider and add the provider to your main.ts:&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;const provider = new HcloudProvider(this, &quot;hetzner&quot;, {
+})
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Don’t put your token into the provider, it will end up in the cdk.out files
+and depending on how you store them may pose a security issue.&lt;/p&gt;
+
+&lt;p&gt;Instead, when you run cdktf, do something like:&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;HCLOUD_TOKEN=$(&amp;lt;token ) cdktf diff
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Hetzner is organized by datacenters&lt;/p&gt;
+
+&lt;h2 id=&quot;ssh-keys&quot;&gt;SSH Keys&lt;/h2&gt;
+&lt;p&gt;Injecting ssh keys into servers requires creating SshKey resources:&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;const sshPublicKeys = [
+      [
+	    &quot;danj&quot;,
+        &quot;ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKw9W05dLNGIH1jM9ceezvbLx/I2nTAeP3ZIU4Hsm+o9 danj&quot;
+	  ]
+    ];
+
+    sshPublicKeys.map(([name,key],idx) =&amp;gt; new SshKey(this, `ssh-${idx}`, {
+      name,
+      publicKey: key
+    }));
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;firewall&quot;&gt;Firewall&lt;/h2&gt;
+&lt;p&gt;You probably want one of them&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    new Firewall(this, &quot;firewall&quot;, {
+      name: &quot;stack-fw&quot;,
+      rule: [
+	{
+	  description: &quot;ssh from office&quot;,
+	  direction: &quot;in&quot;,
+	  protocol: &quot;tcp&quot;,
+	  port: &quot;22&quot;,
+	  sourceIps
+	},
+	{
+	  description: &quot;icmp from office&quot;,
+	  direction: &quot;in&quot;,
+	  protocol: &quot;icmp&quot;,
+	  sourceIps
+	}
+      ],
+      applyTo: [
+        { labelSelector: &quot;office-only&quot; },
+      ]
+    });
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The applyTo-&amp;gt;labelSelector creates a forward association with
+servers that you want to tie to this firewall, as servers come up
+if the labelSelector matches it will adopt this firewall.&lt;/p&gt;
+
+&lt;h2 id=&quot;userdata&quot;&gt;userData&lt;/h2&gt;
+&lt;p&gt;Update and install some software while the server comes up with
+cloud-init. The first line has to be a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;#!&lt;/code&gt; or the data will
+not be given the right mime-type and won’t run.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    const userData = [
+      &quot;#!/bin/bash&quot;,
+      &quot;export NEEDRESTART_MODE=a&quot;,
+      &quot;apt -y update&quot;,
+      &quot;apt -y upgrade&quot;,
+      &quot;apt -y install docker.io docker-compose docker-buildx&quot;,
+    ].join(&quot;\n&quot;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;server&quot;&gt;Server&lt;/h2&gt;
+&lt;p&gt;The labels need to match the firewall selector, but the docs
+are not clear on if the match is by key or value. sshKeys
+are by name of the resource. I tried to do only IPv6, but
+my network isn’t properly configured for it, so that’s a
+battle for later.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    const server = new Server(this, &quot;server&quot;, {
+      provider,
+      labels: { &quot;office-only&quot;: &quot;office-only&quot; },
+      backups: false,
+      datacenter,
+      name: &quot;office-services&quot;,
+      image: &quot;ubuntu-22.04&quot;,
+      serverType: &quot;cpx11&quot;,
+      userData,
+      sshKeys: [&quot;danj&quot;],
+      publicNet: [
+	    {
+	      ipv4Enabled: true,
+	      ipv6Enabled: true
+  	    }
+      ]
+    });
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;volume&quot;&gt;Volume&lt;/h2&gt;
+&lt;p&gt;For a bit of storage, a direct attach block store volume.
+The size is in GiB, deletionProtection set to true will
+prevent cdktf destroy from completing, it does work.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    new Volume(this, &quot;office-data&quot;, {
+      name: &quot;office-data&quot;,
+      size: 10,
+      automount: true,
+      format: &quot;xfs&quot;,
+      deleteProtection: true,
+      serverId: Fn.tonumber(server.id),
+    });
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The &lt;strong&gt;important&lt;/strong&gt; takeaway is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Fn.tonumber&lt;/code&gt;. It took quite
+a while to find any hint about how to use/refer to a materialized id
+that also is not the right type.
+Using TS to convert the value doesn’t work because it is too soon.
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Fn.tonumber&lt;/code&gt; is getting passed as a function into materialization.&lt;/p&gt;
+
+&lt;p&gt;I’d not seen this in AWS since ids are all strings. But for Hetzner the
+serverId parameter for Volume is a number but the type of server.id is a string.&lt;/p&gt;
+
+&lt;p&gt;The Volume, with automount: true, is mounted on start up, although the
+exact moment (before or after cloud-init runs user-data) is unknown to me.
+The default mount is like /mnt/HC_Volume_100314108&lt;/p&gt;
+
+&lt;h1 id=&quot;resources&quot;&gt;Resources&lt;/h1&gt;
+
+&lt;p&gt;https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs&lt;/p&gt;
+
+&lt;p&gt;https://developer.hashicorp.com/terraform/language/functions&lt;/p&gt;
+
+&lt;p&gt;https://developer.hashicorp.com/terraform/cdktf&lt;/p&gt;</content><author><name>Dan Janowski</name></author><category term="infrastructure" /><category term="cdk" /><category term="hetzner" /><summary type="html">Having a small project to deploy at Hetzner, I decided to try using CDK for the first time outside of AWS. Hashicorp’s CDKTF rolls AWS CDK with Terraform for doing IAC with the many TF providers available.</summary></entry><entry><title type="html">Publishing Jetenv to HEX</title><link href="https://danj3.github.io/2024/01/announcing-jetenv/" rel="alternate" type="text/html" title="Publishing Jetenv to HEX" /><published>2024-01-19T10:00:00-05:00</published><updated>2024-01-19T10:00:00-05:00</updated><id>https://danj3.github.io/2024/01/announcing-jetenv</id><content type="html" xml:base="https://danj3.github.io/2024/01/announcing-jetenv/">&lt;p&gt;Announcing that today a new package &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Jetenv&lt;/code&gt; will be published to &lt;a href=&quot;https://hex.pm/jetenv&quot;&gt;hex&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This package offers a new approach to application configuration that moves all runtime configuration and secrets to the environment. This changes approaches for deployment of containers, especially with any orchestration system.&lt;/p&gt;
 
 &lt;p&gt;Your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runtime.exs&lt;/code&gt; can look just like this:&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-elixir&quot; data-lang=&quot;elixir&quot;&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Config&lt;/span&gt;
-&lt;span class=&quot;no&quot;&gt;Jetenv&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;load_env&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;</content><author><name></name></author><category term="elixir" /><category term="hex" /><category term="jetenv" /><category term="elixir" /><summary type="html">Announcing that today a new package Jetenv will be published to hex.</summary></entry><entry><title type="html">Emacs: mini-buffer input that conflicts with completion</title><link href="https://danj3.github.io/2023/12/emacs-mini-buffer-input-that-conflicts-with-completion/" rel="alternate" type="text/html" title="Emacs: mini-buffer input that conflicts with completion" /><published>2023-12-31T20:08:33-05:00</published><updated>2023-12-31T20:08:33-05:00</updated><id>https://danj3.github.io/2023/12/emacs-mini-buffer-input-that-conflicts-with-completion</id><content type="html" xml:base="https://danj3.github.io/2023/12/emacs-mini-buffer-input-that-conflicts-with-completion/">&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
+&lt;span class=&quot;no&quot;&gt;Jetenv&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;load_env&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;</content><author><name>Dan Janowski</name></author><category term="elixir" /><category term="hex" /><category term="jetenv" /><category term="elixir" /><summary type="html">Announcing that today a new package Jetenv will be published to hex.</summary></entry><entry><title type="html">Emacs: mini-buffer input that conflicts with completion</title><link href="https://danj3.github.io/2023/12/emacs-mini-buffer-input-that-conflicts-with-completion/" rel="alternate" type="text/html" title="Emacs: mini-buffer input that conflicts with completion" /><published>2023-12-31T20:08:33-05:00</published><updated>2023-12-31T20:08:33-05:00</updated><id>https://danj3.github.io/2023/12/emacs-mini-buffer-input-that-conflicts-with-completion</id><content type="html" xml:base="https://danj3.github.io/2023/12/emacs-mini-buffer-input-that-conflicts-with-completion/">&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
 &lt;p&gt;In Emacs 29 with &lt;code&gt;company-mode&lt;/code&gt;, I have gotten stuck using &lt;code&gt;find-file&lt;/code&gt; in the mini-buffer when creating a new file in that completion only offers what exists and &lt;code&gt;C-g &lt;/code&gt;quits find-file, &lt;code&gt;&amp;lt;return&gt;&lt;/code&gt; will replace input with the selected/default completion. The answer is simple, but not documented anywhere I could find, &lt;code&gt;vertico-exit-input&lt;/code&gt; !&lt;/p&gt;
 &lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
 &lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
@@ -189,242 +393,4 @@ foobar
 &lt;p&gt;&lt;!-- /wp:code --&gt;&lt;/p&gt;
 &lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
 &lt;p&gt;My usual mode of testing this kind of config is to &lt;code&gt;echo hello &gt; /acme-challenge/foo.txt&lt;/code&gt; and then use &lt;code&gt;curl http://domain.io/.well-known/acme-challenge/foo.txt&lt;/code&gt; and if you see &lt;code&gt;hello&lt;/code&gt; then you should be good to go.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;</content><author><name>Dan</name></author><category term="Uncategorized" /><category term="nginx" /><category term="acme certificates" /><summary type="html">To more transparently support Let&apos;s Encrypt and the acme-challenge for http, here is a config that can be used with nginx. In the case all traffic showing up as HTTP gets redirected to HTTPS, it&apos;s easiest to respond to challenges without the redirect.</summary></entry><entry><title type="html">SSH keys in Docker</title><link href="https://danj3.github.io/2021/02/ssh-keys-in-docker/" rel="alternate" type="text/html" title="SSH keys in Docker" /><published>2021-02-09T13:49:13-05:00</published><updated>2021-02-09T13:49:13-05:00</updated><id>https://danj3.github.io/2021/02/ssh-keys-in-docker</id><content type="html" xml:base="https://danj3.github.io/2021/02/ssh-keys-in-docker/">&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;One way that I use docker is to encapsulate all the configuration of a remote site. By using docker-compose and a container that just runs /bin/sh, running commands in a controlled environment is easy as exec. One issue I had is how to use my ssh identity. The most flexible answer is to use secrets with docker-compose.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:more --&gt;&lt;br /&gt;
-&lt;!--more--&gt;&lt;br /&gt;
-&lt;!-- /wp:more --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;In the Dockerfile, add the following RUN&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:code --&gt;&lt;/p&gt;
-&lt;pre class=&quot;wp-block-code&quot;&gt;&lt;code&gt;RUN mkdir -p .ssh &amp;amp;&amp;amp; chmod 700 .ssh &amp;amp;&amp;amp; ln -s /run/secrets/user_ssh_key /home/someuser/.ssh/id_rsa&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;!-- /wp:code --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Then in &lt;code&gt;docker-compose.yml&lt;/code&gt;, a few bits:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;In your service definition:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:code --&gt;&lt;/p&gt;
-&lt;pre class=&quot;wp-block-code&quot;&gt;&lt;code&gt;service:
-  some-service:
-...
-    secrets:
-      - user_ssh_key&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;!-- /wp:code --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Then a secrets section (a top level section):&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:code --&gt;&lt;/p&gt;
-&lt;pre class=&quot;wp-block-code&quot;&gt;&lt;code&gt;secrets:
-  user_ssh_key:
-    file: ~/.ssh/id_rsa&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;!-- /wp:code --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;When the container starts, the content of &lt;code&gt;id_rsa&lt;/code&gt; will appear in &lt;code&gt;/run/secrets/user_ssh_key&lt;/code&gt; with usable permissions, and it will not be part of the image or non-running container.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Then to do ssh using a config that may be only in the container can be done with&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:code --&gt;&lt;/p&gt;
-&lt;pre class=&quot;wp-block-code&quot;&gt;&lt;code&gt;docker exec -it some-service ssh &amp;#91;some host]&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;!-- /wp:code --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;This kind of container can be useful for a bunch of other things since it can be customized with run-time packages, software, etc that the host system doesn&apos;t need to be polluted with.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;</content><author><name>Dan</name></author><category term="Uncategorized" /><category term="docker" /><category term="ssh" /><summary type="html">One way that I use docker is to encapsulate all the configuration of a remote site. By using docker-compose and a container that just runs /bin/sh, running commands in a controlled environment is easy as exec. One issue I had is how to use my ssh identity. The most flexible answer is to use secrets with docker-compose.</summary></entry><entry><title type="html">docker network conflict?</title><link href="https://danj3.github.io/2021/01/docker-network-conflict/" rel="alternate" type="text/html" title="docker network conflict?" /><published>2021-01-29T10:43:27-05:00</published><updated>2021-01-29T10:43:27-05:00</updated><id>https://danj3.github.io/2021/01/docker-network-conflict</id><content type="html" xml:base="https://danj3.github.io/2021/01/docker-network-conflict/">&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Docker uses 172.17.0.0 as the first network and increments the second octet for each new network. If your network happens to use internal networks in the range, you&apos;ll have routing problems. Here&apos;s how to change what docker uses for numbering networks.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:more --&gt;&lt;br /&gt;
-&lt;!--more--&gt;&lt;br /&gt;
-&lt;!-- /wp:more --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Docker uses &lt;code&gt;daemon.json&lt;/code&gt; which is usually in &lt;code&gt;/etc/docker&lt;/code&gt; if you install it as a package. If you install docker as a snap, which is recommended, you&apos;ll find it in &lt;code&gt;/var/snap/docker/current/config/daemon.json&lt;/code&gt;. Here&apos;s an example of the change to make:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:code --&gt;&lt;/p&gt;
-&lt;pre class=&quot;wp-block-code&quot;&gt;&lt;code&gt;{
-  &quot;log-level&quot;:        &quot;error&quot;,
-  &quot;storage-driver&quot;:   &quot;overlay2&quot;,
-  &quot;default-address-pools&quot;:
-  &amp;#91;
-    {&quot;base&quot;:&quot;172.100.0.0/16&quot;,&quot;size&quot;:24}
-  ]
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;!-- /wp:code --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Add the &quot;default-address-pools&quot; key and the associated value, change the network base to suit your needs. Remember to add a &lt;code&gt;,&lt;/code&gt; to the end of the prior line.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;The base will be the first network, successive networks will increment from there. I&apos;ve been unable to find clear documentation on the base value string, but my intuition is that the &lt;code&gt;/16&lt;/code&gt; means each new network provisioned will increment at the 2nd octet, in this case 172.100, 172.101, 172.102, and so on. However, the size, i.e. netmask, will be a &lt;code&gt;/24&lt;/code&gt;. It&apos;s not clear why the network stepping and size are not the same.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;If you&apos;re using snaps, to reload the configuration means restarting the daemon:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:code --&gt;&lt;/p&gt;
-&lt;pre class=&quot;wp-block-code&quot;&gt;&lt;code&gt;sudo snap restart docker&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;!-- /wp:code --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;If it doesn&apos;t restart, you can see the logs:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:code --&gt;&lt;/p&gt;
-&lt;pre class=&quot;wp-block-code&quot;&gt;&lt;code&gt;sudo snap logs docker&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;!-- /wp:code --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;To see that the change worked, take a look at the bridge, default,  network:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:code --&gt;&lt;/p&gt;
-&lt;pre class=&quot;wp-block-code&quot;&gt;&lt;code&gt;$ docker network inspect bridge
-&amp;#91;
-    {
-        &quot;Name&quot;: &quot;bridge&quot;,
-        &quot;Id&quot;: &quot;c96d8c88432e1120cf0260677f503eb1d2e04c692f81d2e9a034115384e8a763&quot;,
-        &quot;Created&quot;: &quot;2021-01-29T07:36:04.76114402-05:00&quot;,
-        &quot;Scope&quot;: &quot;local&quot;,
-        &quot;Driver&quot;: &quot;bridge&quot;,
-        &quot;EnableIPv6&quot;: false,
-        &quot;IPAM&quot;: {
-            &quot;Driver&quot;: &quot;default&quot;,
-            &quot;Options&quot;: null,
-            &quot;Config&quot;: &amp;#91;
-                {
-                    &quot;Subnet&quot;: &quot;172.100.0.0/24&quot;
-                }
-            ]
-        },
-        &quot;Internal&quot;: false,
-        &quot;Attachable&quot;: false,
-        &quot;Ingress&quot;: false,
-        &quot;ConfigFrom&quot;: {
-            &quot;Network&quot;: &quot;&quot;
-        },
-        &quot;ConfigOnly&quot;: false,
-        &quot;Containers&quot;: {},
-        &quot;Options&quot;: {
-            &quot;com.docker.network.bridge.default_bridge&quot;: &quot;true&quot;,
-            &quot;com.docker.network.bridge.enable_icc&quot;: &quot;true&quot;,
-            &quot;com.docker.network.bridge.enable_ip_masquerade&quot;: &quot;true&quot;,
-            &quot;com.docker.network.bridge.host_binding_ipv4&quot;: &quot;0.0.0.0&quot;,
-            &quot;com.docker.network.bridge.name&quot;: &quot;docker0&quot;,
-            &quot;com.docker.network.driver.mtu&quot;: &quot;1500&quot;
-        },
-        &quot;Labels&quot;: {}
-    }
-]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;!-- /wp:code --&gt;&lt;/p&gt;</content><author><name>Dan</name></author><category term="Docker" /><category term="docker" /><category term="routing" /><category term="networking" /><category term="snaps" /><category term="ubuntu" /><summary type="html">Docker uses 172.17.0.0 as the first network and increments the second octet for each new network. If your network happens to use internal networks in the range, you&apos;ll have routing problems. Here&apos;s how to change what docker uses for numbering networks.</summary></entry><entry><title type="html">iocage networking with vlans</title><link href="https://danj3.github.io/2021/01/iocage-networking-with-vlans/" rel="alternate" type="text/html" title="iocage networking with vlans" /><published>2021-01-07T13:26:44-05:00</published><updated>2021-01-07T13:26:44-05:00</updated><id>https://danj3.github.io/2021/01/iocage-networking-with-vlans</id><content type="html" xml:base="https://danj3.github.io/2021/01/iocage-networking-with-vlans/">&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;I spent too much time figuring out why traffic was not routing with an iocage/jail configured to run on a VLAN to not write something about it. Here&apos;s the desired outcome:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:quote --&gt;&lt;/p&gt;
-&lt;blockquote class=&quot;wp-block-quote&quot;&gt;&lt;p&gt;A BSD iocage/jail running on a TruNas core system using vnet with it&apos;s own IP address that&apos;s part of a VLAN (not the untagged network of the NAS system itself).&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;&lt;!-- /wp:quote --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;The questions that arise are:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:list {&quot;ordered&quot;:true} --&gt;&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;What bridges to use&lt;/li&gt;
-&lt;li&gt;Where to assign IP addresses for the NAS side&lt;/li&gt;
-&lt;li&gt;How to configure iocage to attach to the plumbing correctly&lt;/li&gt;
-&lt;li&gt;When it doesn&apos;t work, what to look for&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;&lt;!-- /wp:list --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:more --&gt;&lt;br /&gt;
-&lt;!--more--&gt;&lt;br /&gt;
-&lt;!-- /wp:more --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Starting with the base interface, bge0, when setting up (or before doing this work) the host IP address is assigned here. It can stay assigned directly to the interface, it doesn&apos;t seem to have any impact.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Moving on to the VLAN (let&apos;s say the VLAN Tag is 52) you want to put the jail on, create a new interface in Network-&amp;gt;Interfaces:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:list {&quot;ordered&quot;:true} --&gt;&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;Add&lt;/li&gt;
-&lt;li&gt;Type: VLAN&lt;/li&gt;
-&lt;li&gt;Name: VLAN52&lt;/li&gt;
-&lt;li&gt;Parent Interface: bge0&lt;/li&gt;
-&lt;li&gt;Vlan tag: 52&lt;/li&gt;
-&lt;li&gt;IP address: use an available IP on your 52 vlan that will be for the NAS system itself. This ,just be different from the IP you want to assign to the jail. Be sure to set the mask (/24 usually) to be correct for the IP segment.&lt;/li&gt;
-&lt;li&gt;Apply&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;&lt;!-- /wp:list --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Now create a bridge for this interface. A bridge is necessary for iocage to attach the vnet interfaces, think of it as a wiring point where the VLAN52 interface will connect with the jail vnet interface(s), there can be more than one jail/vnet attached to this bridge if you want them to all be on VLAN52. Create the bridge:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:list {&quot;ordered&quot;:true} --&gt;&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;Type: bridge&lt;/li&gt;
-&lt;li&gt;Name: bridge52 (named after the VLAN it connects)&lt;/li&gt;
-&lt;li&gt;Bridge members: vlan52&lt;/li&gt;
-&lt;li&gt;IP address: none, since vlan52 has an assigned IP and because assigning an IP for the NAS to the bridge didn&apos;t seem to work.&lt;/li&gt;
-&lt;li&gt;Apply&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;&lt;!-- /wp:list --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Now you&apos;ll need to go through &quot;Network Test&quot;, the IP you assigned to the vlan52 interface should be pingable now. You&apos;ll then need to &quot;Save&quot; the network changes. Running &lt;code&gt;ifconfig&lt;/code&gt; after this process should show something that looks like this:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:code --&gt;&lt;/p&gt;
-&lt;pre class=&quot;wp-block-code&quot;&gt;&lt;code&gt;bge0: flags=8943&amp;lt;UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500
-	options=c019b&amp;lt;RXCSUM,TXCSUM,VLAN_MTU,VLAN_HWTAGGING,VLAN_HWCSUM,TSO4,VLAN_HWTSO,LINKSTATE&gt;
-	ether aa:aa:aa:aa:aa:aa
-	inet 10.10.10.11 netmask 0xffffff00 broadcast 10.10.10.255
-	media: Ethernet autoselect (1000baseT &amp;lt;full-duplex&gt;)
-	status: active
-	nd6 options=9&amp;lt;PERFORMNUD,IFDISABLED&gt;
-vlan52: flags=8943&amp;lt;UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500
-	options=80001&amp;lt;RXCSUM,LINKSTATE&gt;
-	ether aa:aa:aa:aa:aa:aa
-	inet 10.10.52.11 netmask 0xffffff00 broadcast 10.10.52.255
-	groups: vlan
-	vlan: 52 vlanpcp: 0 parent interface: bge0
-	media: Ethernet autoselect (1000baseT &amp;lt;full-duplex&gt;)
-	status: active
-	nd6 options=9&amp;lt;PERFORMNUD,IFDISABLED&gt;
-bridge52: flags=8843&amp;lt;UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST&gt; metric 0 mtu 1500
-	ether 02:42:03:1c:d1:34
-	id 00:00:00:00:00:00 priority 32768 hellotime 2 fwddelay 15
-	maxage 20 holdcnt 6 proto stp-rstp maxaddr 2000 timeout 1200
-	root id 00:00:00:00:00:00 priority 32768 ifcost 0 port 0
-	member: vlan52 flags=143&amp;lt;LEARNING,DISCOVER,AUTOEDGE,AUTOPTP&gt;
-	        ifmaxaddr 0 port 4 priority 128 path cost 55
-	groups: bridge
-	nd6 options=9&amp;lt;PERFORMNUD,IFDISABLED&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;!-- /wp:code --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:heading --&gt;&lt;/p&gt;
-&lt;h2&gt;iocage configuration&lt;/h2&gt;
-&lt;p&gt;&lt;!-- /wp:heading --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;The important point about the iocage configuration to understand, that is not obvious, is that without a few specific and simple steps, iocage will create a new bridge (&lt;code&gt;bridge0&lt;/code&gt;) and attach the vnet&apos;s to that. If you do only have of the steps, it&apos;ll look sort of ok, but won&apos;t work.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Create the jail, the first page of options is routine, name, type (clone), release (based on your system).  Page 2 (Configure Networking):&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:list {&quot;ordered&quot;:true} --&gt;&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;VNET: check&lt;/li&gt;
-&lt;li&gt;vnet_default_interface: none (important!)&lt;/li&gt;
-&lt;li&gt;ipv4 interface: vnet0&lt;/li&gt;
-&lt;li&gt;ipv4 address: set to the IP you&apos;ve chosen for the jail&lt;/li&gt;
-&lt;li&gt;ipv4 default router: set if you what the jail to have a route off the vlan&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;&lt;!-- /wp:list --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;You can also use DHCP. At this point all you can do is review and submit. Once you&apos;ve done that, go back an edit the settings. This could be done using &apos;Advanced&apos; during creation also. Go to the network section and observe the setting for interfaces, it&apos;ll default to &lt;code&gt;vnet0:bridge0&lt;/code&gt;. This needs to be changed to &lt;code&gt;vnet0:bridge52&lt;/code&gt;, referring to the bridge we set up above.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;The important part here is that setting &lt;code&gt;vnet_default_interface: none&lt;/code&gt; and &lt;code&gt;interfaces: vnet0:bridge52&lt;/code&gt; are the critical pair of settings that will properly put the jail onto &lt;code&gt;bridge52&lt;/code&gt; and create the right connectivity&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:heading --&gt;&lt;/p&gt;
-&lt;h2&gt;Problems&lt;/h2&gt;
-&lt;p&gt;&lt;!-- /wp:heading --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;So what happens if these get skipped.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:list {&quot;ordered&quot;:true} --&gt;&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;without `interfaces: `vnet0:bridge52` the jail will be put on the default bridge0 attached to bge0&lt;/li&gt;
-&lt;li&gt;without `vnet_default_interface: none` the vnet0 will be attached to bridge52, but iocage will also attach bge0 to bridge52 creating a senseless and non-functioning network. If this happens you&apos;ll see bge0 as a member of bridge52.&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;&lt;!-- /wp:list --&gt;&lt;/p&gt;</content><author><name>Dan</name></author><category term="System Admin" /><category term="freebsd" /><category term="jails" /><category term="iocage" /><summary type="html">Solving traffic routing problems with iocage and VLANs</summary></entry></feed>
+&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;</content><author><name>Dan</name></author><category term="Uncategorized" /><category term="nginx" /><category term="acme certificates" /><summary type="html">To more transparently support Let&apos;s Encrypt and the acme-challenge for http, here is a config that can be used with nginx. In the case all traffic showing up as HTTP gets redirected to HTTPS, it&apos;s easiest to respond to challenges without the redirect.</summary></entry></feed>

@@ -1,0 +1,63 @@
+<h2 id="the-technology">The Technology</h2>
+
+<h3 id="software">Software</h3>
+
+<p>In 2016 we made a clean break with Ruby, and the Object Oriented
+paradigm, and transitioned to <a href="https://www.elixir-lang.org/">Elixir</a> for its functional and
+immutable style, strong foundation of the BEAM, and an expressivity
+that dramatically enhances productivity, safety and durability. The
+Phoenix framework and Ecto with Postgresql alone have enabled the
+craftsmanship we truly appreciate and has reinforced the transition to
+Elixir, and that’s naming merely two!</p>
+
+<p>In the same period, <a href="https://reactjs.org">React.js</a> and <a href="https://react-native.org">React native</a> coupled with GraphQL
+(via Absinthe and Apollo) have become the mainstay for front-end
+work. While our focus is server side, front-end is always a part of
+the mix.</p>
+
+<p>In 2012 we moved away from Mercurial to GIT and have not looked
+back. Mercurial was a great improvement over CVS, but its time is past
+also. Github has become a default platform for hosted GIT and more
+specifically code review, but we also like Gerrit for a more technical
+and GIT-centric approach.</p>
+
+<p>Our approach to testing is an exercise in pragmatics. A lot of time
+can be spent writing tests, some that are truly invaluable and some
+that are repeatedly thrown away as things change. The priority is to
+maximize the former and minimize the latter. Thus, we tend to use TDD
+for expressing requirements when that’s valuable, but let them go if
+they become irrelevant. Testing is most important when the data and
+interaction is just complex enough to not be apparent, or when the
+edge cases are cutting. Thanks to Elixir and ExUnit, we’ve developed
+some excellent ways of testing, in terms of contracts, cross module
+test support, and Ecto Sandboxing. With the addition of dialyzer,
+Elixir really has us covered.</p>
+
+<h3 id="deployment">Deployment</h3>
+
+<p>Taking a pragmatic approach to deployment, one based on the expertise
+on-hand and long term is an important balance. Containers from
+development through deployment are keys to success. Combine that with
+CDK and AWS/ECS and it is a formula that can work for even small teams
+with limited DevOps bandwidth.</p>
+
+<h3 id="infrastructure">Infrastructure</h3>
+
+<p>It is easy to neglect this category for a startup, but it becomes a
+friction point and an expense if left so. From an early stage startup,
+we like including Atlassian’s Confluence and JIRA to create an
+organizational memory and to manage development. There are good
+alternatives just as long as the two basic functions are handled.</p>
+
+<p>Beyond that point there are countless efforts we have undertaken to
+coordinate resources and provide better central management. These
+include:</p>
+
+<ul>
+  <li>Cloud VMs for development</li>
+  <li>Directory services, i.e. AD</li>
+  <li>SSL management</li>
+  <li>Security and firewalls</li>
+  <li>Gerrit</li>
+  <li>LAN infrastructure and services</li>
+</ul>

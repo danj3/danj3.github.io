@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>First deployment at Hetzner with CDKTF | Unravel digital illusion</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="First deployment at Hetzner with CDKTF" />
+<meta name="author" content="Dan Janowski" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Having a small project to deploy at Hetzner, I decided to try using CDK for the first time outside of AWS. Hashicorp’s CDKTF rolls AWS CDK with Terraform for doing IAC with the many TF providers available." />
+<meta property="og:description" content="Having a small project to deploy at Hetzner, I decided to try using CDK for the first time outside of AWS. Hashicorp’s CDKTF rolls AWS CDK with Terraform for doing IAC with the many TF providers available." />
+<link rel="canonical" href="https://danj3.github.io/2024/01/hetzner-with-cdktf/" />
+<meta property="og:url" content="https://danj3.github.io/2024/01/hetzner-with-cdktf/" />
+<meta property="og:site_name" content="Unravel digital illusion" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-01-25T10:00:00-05:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="First deployment at Hetzner with CDKTF" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dan Janowski"},"dateModified":"2024-01-25T10:00:00-05:00","datePublished":"2024-01-25T10:00:00-05:00","description":"Having a small project to deploy at Hetzner, I decided to try using CDK for the first time outside of AWS. Hashicorp’s CDKTF rolls AWS CDK with Terraform for doing IAC with the many TF providers available.","headline":"First deployment at Hetzner with CDKTF","mainEntityOfPage":{"@type":"WebPage","@id":"https://danj3.github.io/2024/01/hetzner-with-cdktf/"},"url":"https://danj3.github.io/2024/01/hetzner-with-cdktf/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://danj3.github.io/feed.xml" title="Unravel digital illusion" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Unravel digital illusion</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/privacy-policy/">Privacy Policy</a><a class="page-link" href="/company/">Triskelion, LLC</a><a class="page-link" href="/to_begin/">To Begin</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">First deployment at Hetzner with CDKTF</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-01-25T10:00:00-05:00" itemprop="datePublished">Jan 25, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Having a small project to deploy at Hetzner, I decided
+to try using CDK for the first time outside of AWS. Hashicorp’s
+CDKTF rolls AWS CDK with Terraform for doing IAC with
+the many TF providers available.</p>
+
+<h1 id="getting-started">Getting started</h1>
+
+<p>I followed the install instructions for cdktf itself with
+no issues. I used asdf to install nodejs 20.11.0. cdktf init 
+with typescript as the language.</p>
+
+<h2 id="authentication">Authentication</h2>
+
+<p>A bit of clicking around in Hetzner’s screens leads to the API
+key tool where a bearer token string can be generated.
+For direct API use, which I tried to make sure it was right
+it is a standard <code class="language-plaintext highlighter-rouge">authorization: bearer &lt;token&gt;</code> http header.
+I wrote the plain token to a file, which is useful later.</p>
+
+<h1 id="the-stack">The Stack</h1>
+
+<p>Install the hcloud/provider and add the provider to your main.ts:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>const provider = new HcloudProvider(this, "hetzner", {
+})
+</code></pre></div></div>
+
+<p>Don’t put your token into the provider, it will end up in the cdk.out files
+and depending on how you store them may pose a security issue.</p>
+
+<p>Instead, when you run cdktf, do something like:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HCLOUD_TOKEN=$(&lt;token ) cdktf diff
+</code></pre></div></div>
+
+<p>Hetzner is organized by datacenters</p>
+
+<h2 id="ssh-keys">SSH Keys</h2>
+<p>Injecting ssh keys into servers requires creating SshKey resources:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>const sshPublicKeys = [
+      [
+	    "danj",
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKw9W05dLNGIH1jM9ceezvbLx/I2nTAeP3ZIU4Hsm+o9 danj"
+	  ]
+    ];
+
+    sshPublicKeys.map(([name,key],idx) =&gt; new SshKey(this, `ssh-${idx}`, {
+      name,
+      publicKey: key
+    }));
+</code></pre></div></div>
+
+<h2 id="firewall">Firewall</h2>
+<p>You probably want one of them</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    new Firewall(this, "firewall", {
+      name: "stack-fw",
+      rule: [
+	{
+	  description: "ssh from office",
+	  direction: "in",
+	  protocol: "tcp",
+	  port: "22",
+	  sourceIps
+	},
+	{
+	  description: "icmp from office",
+	  direction: "in",
+	  protocol: "icmp",
+	  sourceIps
+	}
+      ],
+      applyTo: [
+        { labelSelector: "office-only" },
+      ]
+    });
+</code></pre></div></div>
+
+<p>The applyTo-&gt;labelSelector creates a forward association with
+servers that you want to tie to this firewall, as servers come up
+if the labelSelector matches it will adopt this firewall.</p>
+
+<h2 id="userdata">userData</h2>
+<p>Update and install some software while the server comes up with
+cloud-init. The first line has to be a <code class="language-plaintext highlighter-rouge">#!</code> or the data will
+not be given the right mime-type and won’t run.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    const userData = [
+      "#!/bin/bash",
+      "export NEEDRESTART_MODE=a",
+      "apt -y update",
+      "apt -y upgrade",
+      "apt -y install docker.io docker-compose docker-buildx",
+    ].join("\n")
+</code></pre></div></div>
+
+<h2 id="server">Server</h2>
+<p>The labels need to match the firewall selector, but the docs
+are not clear on if the match is by key or value. sshKeys
+are by name of the resource. I tried to do only IPv6, but
+my network isn’t properly configured for it, so that’s a
+battle for later.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    const server = new Server(this, "server", {
+      provider,
+      labels: { "office-only": "office-only" },
+      backups: false,
+      datacenter,
+      name: "office-services",
+      image: "ubuntu-22.04",
+      serverType: "cpx11",
+      userData,
+      sshKeys: ["danj"],
+      publicNet: [
+	    {
+	      ipv4Enabled: true,
+	      ipv6Enabled: true
+  	    }
+      ]
+    });
+</code></pre></div></div>
+
+<h2 id="volume">Volume</h2>
+<p>For a bit of storage, a direct attach block store volume.
+The size is in GiB, deletionProtection set to true will
+prevent cdktf destroy from completing, it does work.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    new Volume(this, "office-data", {
+      name: "office-data",
+      size: 10,
+      automount: true,
+      format: "xfs",
+      deleteProtection: true,
+      serverId: Fn.tonumber(server.id),
+    });
+
+</code></pre></div></div>
+
+<p>The <strong>important</strong> takeaway is <code class="language-plaintext highlighter-rouge">Fn.tonumber</code>. It took quite
+a while to find any hint about how to use/refer to a materialized id
+that also is not the right type.
+Using TS to convert the value doesn’t work because it is too soon.
+<code class="language-plaintext highlighter-rouge">Fn.tonumber</code> is getting passed as a function into materialization.</p>
+
+<p>I’d not seen this in AWS since ids are all strings. But for Hetzner the
+serverId parameter for Volume is a number but the type of server.id is a string.</p>
+
+<p>The Volume, with automount: true, is mounted on start up, although the
+exact moment (before or after cloud-init runs user-data) is unknown to me.
+The default mount is like /mnt/HC_Volume_100314108</p>
+
+<h1 id="resources">Resources</h1>
+
+<p>https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs</p>
+
+<p>https://developer.hashicorp.com/terraform/language/functions</p>
+
+<p>https://developer.hashicorp.com/terraform/cdktf</p>
+
+  </div><a class="u-url" href="/2024/01/hetzner-with-cdktf/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Unravel digital illusion</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Dan Janowski</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/danj3"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">danj3</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>investigating ideas and obstacles in software and systems with special attention on the BEAM (elixir/erlang), authentication, and security.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
