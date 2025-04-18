@@ -32,7 +32,7 @@
           </span>
         </label>
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/privacy-policy/">Privacy Policy</a><a class="page-link" href="/company/">Triskelion, LLC</a><a class="page-link" href="/to_begin/">To Begin</a></div>
+        <div class="trigger"><a class="page-link" href="/privacy-policy/">Privacy Policy</a><a class="page-link" href="/about/">About</a></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -44,45 +44,132 @@
   </header>
 
   <div class="post-content">
-    <p>This blog compiles some learnings and discoveries from my
-personal experience in software development and systems.
-It also includes thoughts and investigations about
-related topics.</p>
+    <p>The articles here are about discoveries made, lessons learned, and
+topics explored. Were there enough time there would be much more. So
+as time allows, there is an inconsistent cadence of new articles. But
+the objective is the same, to share working solutions or a point of
+view that may help others.</p>
 
-<p>Some of the things I do work with:</p>
+<h2 id="a-story-of-why">A story of why</h2>
+
+<p>Information can be so easily found by search engine that you (and I)
+may question the value of writing more about anything. But then a
+funny thing happened.</p>
+
+<p>I had a Kerberos problem and searched using the messages and details I
+had at hand.  One of the search results looked promising, only to
+discover that I’d written the post (here) about the very problem I had
+(again). I had solved the problem, posted and forgot enough about it
+to discover in the future a solution I’d already written about.</p>
+
+<p>Search engines miss a lot. There are unique paths to problems the
+don’t score well.  Some content is behind subscriptions. Other content
+is either practically inaccessible or just lost.  However, even in
+cases where a single search and click provides answers, finding those
+answer again is not assured. If I am the constant in these problems,
+then my own record of the solutions is more probably of use than might
+be initially apparent.</p>
+
+<h2 id="technology-is-a-modern-requirement">Technology is a modern requirement</h2>
+
+<p>Technology and the global market economy are deeply
+interdependent. Technology and innovation are the source of gains in
+productivity for economic growth. There is no steady state in the
+economy and so there is always demand for new technology. Simply,
+economic growth demands technology growth. Success for people,
+companies, and nations is largely dependent on their ability to
+innovate.</p>
+
+<h2 id="about-triskelion-llc">About Triskelion, LLC</h2>
+
+<p>The company was <a href="/about/founding">founded</a> to build an <a href="/about/strand">E-Commerce
+site for Strand Book Store</a>. There were subsequent periods of
+contract work under the Triskelion, LLC banner and staff positions.
+Work includes software development, system design, team and product
+management, system and network administration. With work in retail
+books, program trading, social media, fin-tech, internet MSO, grass
+roots action and engagement.</p>
+
+<p>Software development since 2016 has been entirely with
+<a href="https://elixir-lang.org">Elixir</a> and the great flexibility and
+productivity it provides. We support the <a href="https://erlef.org">Erlang Ecosystem
+Foundation</a> and the objective of building
+the next generation of advanced, reliable, realtime applications.</p>
+
+<p><a href="/about/triskelion">More about what Triskelion offers.</a></p>
+
+<h2 id="work-history">Work History</h2>
+
+<h3 id="cinemagram">Cinemagram</h3>
+<p>We built the mobile cinemagram editor and short form video social media platform
+<a href="https://www.theverge.com/2012/2/9/2787212/cinemagram-app-store-cinemagraph-kinotopic">Cinemagram</a>
+for
+<a href="https://www.cnet.com/reviews/cinemagram-android-review/">Android</a> and
+<a href="https://cinemagram.en.softonic.com/iphone">iPhone</a>. This was the
+original short form video social media app. Unfortunately twitter ate
+our lunch with Vine which forced us to pivot. We launched <a href="https://www.buzzfeednews.com/article/katienotopoulos/what-could-possibly-go-wrong-with-yeti">Yeti Campus
+Stories</a>. It
+did succumb to the moderation problem at which point we started
+working on machine learning approaches to the problem. This was 2016
+and it really was ML, gradient descent and all. It was promising, but
+we ran out of runway.</p>
+
+<p>At the end of this period I picked up
+<a href="https://elixir-lang.org">Elixir</a> and found answers that I had been
+looking for during the decade plus of work with Ruby.</p>
+
+<h3 id="exeq">exeq</h3>
+
+<p>I joined <a href="https://www.crunchbase.com/organization/exeq">exeq</a>
+in 2016. A <a href="https://medium.com/exeq">fin-tech</a> firm operating in New
+York and a full stack of Elixir, GraphQL, and React. The integration
+with <a href="https://plaid.com">plaid</a> was the primary data feed integration.
+The Elixir
+<a href="https://medium.com/exeq/of-paris-goats-remotely-building-a-tech-team-76d42d91fd7c">team</a>
+was about five and we were productive with Elixir.
+We didn’t get to that scaling event and run out of runway.</p>
+
+<h3 id="strand-book-store">Strand Book Store</h3>
+
+<p>During <a href="/about/strand">multiple periods</a>, work for Strand has been
+focused on building and supporting the E-commerce evolution of
+sites. Starting with PHP, graduating to Ruby, rebuilding in
+Elixir. Book selling is a unique and challenging retail business on
+all fronts. Integration with <a href="https://basilsoftware.com">Basil</a> for
+the brick and mortar part. Integration with
+<a href="https://www.ingramcontent.com/retailers/products">Ingram</a> for broader
+new content, metadata, and digital assets. In the current incarnation,
+bridging between a <a href="https://en.wikipedia.org/wiki/Magento">Magento</a>
+front-end site and Basil processing multiple source catalog update
+streams and order/payment/shipping integration over
+<a href="https://www.rabbitmq.com">RabbitMQ</a>.</p>
+
+<h3 id="breezeline">Breezeline</h3>
+
+<p>Starting in 2020, building an Elixir team from scratch to bring
+in-house new integrations. These included:</p>
 
 <ul>
-  <li>Elixir</li>
-  <li>Containers</li>
-  <li>Keycloak</li>
-  <li>LDAP</li>
-  <li>Kerberos</li>
-  <li>Linux</li>
-  <li>the “Shell”</li>
+  <li>TiVo provisioning</li>
+  <li>identity management and <a href="https://en.wikipedia.org/wiki/Single_sign-on">single sign-on</a></li>
+  <li>customer self service</li>
+  <li>mobile provisioning</li>
+  <li><a href="https://www.plume.com/homepass">home wireless provisioning</a></li>
+  <li>outage reporting</li>
+  <li>email provider integration</li>
+  <li><a href="https://en.wikipedia.org/wiki/TV_Everywhere">TV Everywhere</a> authorization</li>
+  <li><a href="https://www.servicenow.com">support CRM</a></li>
 </ul>
 
-<h2 id="a-reflection-on-why">A reflection on why</h2>
+<p>The core of these integrations leverage the reliability and
+distributed features of Elixir to tie together
+<a href="https://www.csgi.com">CSG</a> technology used by the company via ENI and
+SLBOS to create flexible, responsive and real-time propagation of
+events and actions.</p>
 
-<p>So much information can be esaily accessed by search engine that
-you (and I) may wonder why bother writing more about what already
-exists. I doubted the value of it and recorded very little, but then
-a funning thing happened.</p>
-
-<p>I had a kerberos problem and I did a bunch
-of searching using the messages and details I had at hand.
-One of the search results looked promising, 
-only to discover that I’d written the post (here) about
-the very problem I had (again). I
-had solved the problem, posted and forgot enough
-about it to discover in the future a solution I’d already
-written about.</p>
-
-<p>Despite the exhaustive content available, there are still
-unique paths to unique (or poorly covered) problems. However,
-even in cases where a single search and click provides answers,
-finding those answer again is not assured. If I am the constant
-in these problems, then my own record of the solutions is more
-probably of use than might be initially apparent.</p>
+<p>Extensive use of <a href="https://absinthe-graphql.org">graphQL</a> provided a
+consistent well documented data and operational boundary allowing
+front-end and back-end development to be independently productive.</p>
 
   </div>
 
