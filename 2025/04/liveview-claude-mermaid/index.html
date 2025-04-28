@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Explaining LiveView with diagrams by Claude.ai | Unravel digital illusion</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="Explaining LiveView with diagrams by Claude.ai" />
+<meta name="author" content="Dan Janowski" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In considering AI use cases and capabilities, I set Claude.ai on the task of describing the life cycle and events for PhoenixLiveView LiveComponent. The prompt, including my typo:" />
+<meta property="og:description" content="In considering AI use cases and capabilities, I set Claude.ai on the task of describing the life cycle and events for PhoenixLiveView LiveComponent. The prompt, including my typo:" />
+<link rel="canonical" href="https://danj3.github.io/2025/04/liveview-claude-mermaid/" />
+<meta property="og:url" content="https://danj3.github.io/2025/04/liveview-claude-mermaid/" />
+<meta property="og:site_name" content="Unravel digital illusion" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-04-28T00:00:00-04:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Explaining LiveView with diagrams by Claude.ai" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dan Janowski"},"dateModified":"2025-04-28T00:00:00-04:00","datePublished":"2025-04-28T00:00:00-04:00","description":"In considering AI use cases and capabilities, I set Claude.ai on the task of describing the life cycle and events for PhoenixLiveView LiveComponent. The prompt, including my typo:","headline":"Explaining LiveView with diagrams by Claude.ai","mainEntityOfPage":{"@type":"WebPage","@id":"https://danj3.github.io/2025/04/liveview-claude-mermaid/"},"url":"https://danj3.github.io/2025/04/liveview-claude-mermaid/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://danj3.github.io/feed.xml" title="Unravel digital illusion" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Unravel digital illusion</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/contact/">Contact</a><a class="page-link" href="/privacy-policy/">Privacy Policy</a><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Explaining LiveView with diagrams by Claude.ai</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-04-28T00:00:00-04:00" itemprop="datePublished">Apr 28, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>In considering AI use cases and capabilities, I set <a href="https://claude.ai">Claude.ai</a> on the task of describing the life cycle and events for PhoenixLiveView LiveComponent. The prompt, including my typo:</p>
+
+<blockquote>
+  <p>Draw a collection of sequence diagrams to explain event handling and callbacks for  PhoenixLiveView LiveComponents work (documentation is https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html#callbacks) written as mermaid code (reference documentation is https://mermaid.js.org/syntax/sequenceDiagram.html).</p>
+</blockquote>
+
+<p>The high level output was:</p>
+
+<blockquote>
+  <p>I’ll create a collection of sequence diagrams that explain event handling and callbacks for Phoenix LiveView LiveComponents using Mermaid. These diagrams will help visualize the lifecycle and interactions of LiveComponents.</p>
+
+  <p>Phoenix LiveComponent Sequence DiagramsDiagram </p>
+
+  <p>Let me create a few more diagrams to cover different aspects of LiveComponent interactions:</p>
+  <ol>
+    <li>LiveComponent Event HandlingDiagram </li>
+    <li>LiveComponent Message HandlingDiagram </li>
+    <li>LiveComponent Parent-Child CommunicationDiagram </li>
+    <li>Stateful LiveComponent LifecycleDiagram </li>
+  </ol>
+
+  <p>These sequence diagrams illustrate the key interactions and lifecycle of Phoenix LiveComponents:</p>
+
+  <p>Initial Mount: Shows how a LiveComponent is initialized and rendered during the first page load.</p>
+
+  <p>Event Handling: Demonstrates how events are processed, differentiating between events targeted directly at the component versus those handled by the parent LiveView.</p>
+
+  <p>Message Handling: Illustrates how send_update works to trigger out-of-band updates to components.</p>
+
+  <p>Parent-Child Communication: Shows the two primary ways parent LiveViews communicate with child LiveComponents.</p>
+
+  <p>Stateful Component Lifecycle: Details how stateful LiveComponents maintain their state across multiple interactions.</p>
+
+  <p>Each diagram visualizes different aspects of the LiveComponent lifecycle, helping to clarify how these components interact with LiveViews and the browser. Would you like me to explain any specific aspect of these diagrams in more detail?</p>
+</blockquote>
+
+<p>The diagrams are below. I’ve looked at them for a few minutes and compared them with the documentation. They seem correct, although I may have missed an error. If you find a mistake or something significantly missing, please let me know (<a href="https://www.linkedin.com/in/dan-janowski"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">dan-janowski</span></a>).</p>
+
+<p>These strike me as pretty well formed and useful diagrams. It would have taken me more than an hour, probably a few, to decide which diagrams to make and the contents. Writing this article has already taken significantly longer to write than Claude took to generate the diagrams. Though I did write updated mermaid and link generating plugins for Liquid to make this post.</p>
+
+<h2 id="livecomponent-lifecycle---initial-mount">LiveComponent Lifecycle - Initial Mount</h2>
+
+<script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"></script>
+<div class="mermaid">
+sequenceDiagram
+    title LiveComponent Lifecycle - Initial Mount
+    
+    Browser-&gt;&gt;LiveView: Initial Request
+    LiveView-&gt;&gt;LiveComponent: mount/1
+    Note over LiveComponent: Initialize state
+    LiveComponent-&gt;&gt;LiveView: Return socket
+    LiveView-&gt;&gt;LiveComponent: update/2
+    Note over LiveComponent: Process assigns
+    LiveComponent-&gt;&gt;LiveView: Return updated socket
+    LiveView-&gt;&gt;LiveComponent: render/1
+    Note over LiveComponent: Generate HTML
+    LiveComponent-&gt;&gt;LiveView: Return rendered HTML
+    LiveView-&gt;&gt;Browser: Send HTML response
+</div>
+
+<h2 id="livecomponent-event-handling">LiveComponent Event Handling</h2>
+
+<script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"></script>
+<div class="mermaid">
+sequenceDiagram
+    title LiveComponent Event Handling
+    
+    Browser-&gt;&gt;LiveView: User Event (phx-click, etc.)
+    Note over LiveView: Event contains phx-target
+    
+    alt Event Targeted at LiveComponent
+        LiveView-&gt;&gt;LiveComponent: handle_event/3
+        Note over LiveComponent: Process event
+        LiveComponent-&gt;&gt;LiveComponent: Update internal state
+        LiveComponent-&gt;&gt;LiveView: Return updated socket
+        LiveView-&gt;&gt;LiveComponent: render/1
+        LiveComponent-&gt;&gt;LiveView: Return rendered HTML
+        LiveView-&gt;&gt;Browser: Send HTML diff
+    else Event Targeted at Parent LiveView
+        LiveView-&gt;&gt;LiveView: handle_event/3
+        Note over LiveView: Process event
+        LiveView-&gt;&gt;LiveView: Update state
+        LiveView-&gt;&gt;LiveComponent: update/2 (if state affects component)
+        LiveComponent-&gt;&gt;LiveView: Return updated socket
+        LiveView-&gt;&gt;LiveComponent: render/1
+        LiveComponent-&gt;&gt;LiveView: Return rendered HTML
+        LiveView-&gt;&gt;Browser: Send HTML diff
+    end
+</div>
+
+<h2 id="livecomponent-message-handling-send_update">LiveComponent Message Handling (send_update)</h2>
+<script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"></script>
+<div class="mermaid">
+sequenceDiagram
+    title LiveComponent Message Handling (send_update)
+    
+    participant Process as "External Process"
+    participant LVReg as "LiveView Registry"
+    participant LiveView
+    participant LiveComponent
+    
+    Process-&gt;&gt;LVReg: send_update(Component, id: id, ...)
+    LVReg-&gt;&gt;LiveView: Find LiveView containing component
+    LiveView-&gt;&gt;LiveComponent: update/2
+    Note over LiveComponent: Process updated assigns
+    LiveComponent-&gt;&gt;LiveView: Return updated socket
+    LiveView-&gt;&gt;LiveComponent: render/1
+    LiveComponent-&gt;&gt;LiveView: Return rendered HTML
+    LiveView-&gt;&gt;Browser: Send HTML diff
+</div>
+
+<h2 id="livecomponent-parent-child-communication">LiveComponent Parent-Child Communication</h2>
+<script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"></script>
+<div class="mermaid">
+sequenceDiagram
+    title LiveComponent Parent-Child Communication
+    
+    Browser-&gt;&gt;LiveView: User Event
+    LiveView-&gt;&gt;LiveView: handle_event/3
+    Note over LiveView: Update state
+    
+    alt Using assign
+        LiveView-&gt;&gt;LiveComponent: update/2 with new assigns
+        LiveComponent-&gt;&gt;LiveView: Return updated socket
+    else Using send_update
+        LiveView-&gt;&gt;LiveComponent: Phoenix.LiveView.send_update
+        Note over LiveComponent: Component receives out-of-band update
+        LiveComponent-&gt;&gt;LiveView: Trigger re-render
+    end
+    
+    LiveView-&gt;&gt;LiveComponent: render/1
+    LiveComponent-&gt;&gt;LiveView: Return rendered HTML
+    LiveView-&gt;&gt;Browser: Send HTML diff
+</div>
+
+<h2 id="stateful-livecomponent-lifecycle">Stateful LiveComponent Lifecycle</h2>
+
+<script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"></script>
+<div class="mermaid">
+sequenceDiagram
+    title Stateful LiveComponent Lifecycle
+    
+    Browser-&gt;&gt;LiveView: Initial Request
+    LiveView-&gt;&gt;LiveComponent: mount/1
+    Note over LiveComponent: Initialize state in socket
+    LiveComponent-&gt;&gt;LiveView: Return socket with state
+    
+    Browser-&gt;&gt;LiveView: User Event (phx-target=component)
+    LiveView-&gt;&gt;LiveComponent: handle_event/3
+    Note over LiveComponent: Process event with socket state
+    LiveComponent-&gt;&gt;LiveComponent: Update socket state
+    LiveComponent-&gt;&gt;LiveView: Return updated socket
+    LiveView-&gt;&gt;Browser: Send HTML diff
+    
+    Note over LiveComponent: State persists between renders
+    
+    Browser-&gt;&gt;LiveView: Another User Event
+    LiveView-&gt;&gt;LiveComponent: handle_event/3
+    Note over LiveComponent: Access previous state from socket
+    LiveComponent-&gt;&gt;LiveView: Return updated socket
+    LiveView-&gt;&gt;Browser: Send HTML diff
+</div>
+
+
+  </div><a class="u-url" href="/2025/04/liveview-claude-mermaid/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Unravel digital illusion</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Dan Janowski</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/danj3"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">danj3</span></a></li><li><a href="https://www.linkedin.com/in/dan-janowski"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">dan-janowski</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>investigating ideas and obstacles in software and systems with special attention on the BEAM (elixir/erlang), authentication, and security.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

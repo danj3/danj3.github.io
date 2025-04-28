@@ -1,4 +1,165 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="https://danj3.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://danj3.github.io/" rel="alternate" type="text/html" /><updated>2025-04-18T13:10:09-04:00</updated><id>https://danj3.github.io/feed.xml</id><title type="html">Unravel digital illusion</title><subtitle>investigating ideas and obstacles in software and systems with special attention on the BEAM (elixir/erlang), authentication, and security.</subtitle><author><name>Dan Janowski</name></author><entry><title type="html">Coding with Claude.ai, a short journey</title><link href="https://danj3.github.io/2025/04/claude-example/" rel="alternate" type="text/html" title="Coding with Claude.ai, a short journey" /><published>2025-04-15T00:00:00-04:00</published><updated>2025-04-15T00:00:00-04:00</updated><id>https://danj3.github.io/2025/04/claude-example</id><content type="html" xml:base="https://danj3.github.io/2025/04/claude-example/">&lt;p&gt;Understanding the uses, limits and pitfalls of AI as your “coding buddy” requires some work and investigation. I’ve chosen to investigate with &lt;a href=&quot;https://claude.ai&quot;&gt;Claude.ai&lt;/a&gt; and compare coding solutions in &lt;a href=&quot;https://elixir-lang.org&quot;&gt;Elixir&lt;/a&gt;, &lt;a href=&quot;https://www.erlang.org&quot;&gt;Erlang&lt;/a&gt; and &lt;a href=&quot;https://en.wikipedia.org/wiki/ECMAScript&quot;&gt;Javascript&lt;/a&gt;. My goal here is to evaluate idiomatic style and forecast how the approaches may hold up. Let’s start with the claude.ai chat interface, nothing fancy like cursor.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="https://danj3.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://danj3.github.io/" rel="alternate" type="text/html" /><updated>2025-04-28T13:38:24-04:00</updated><id>https://danj3.github.io/feed.xml</id><title type="html">Unravel digital illusion</title><subtitle>investigating ideas and obstacles in software and systems with special attention on the BEAM (elixir/erlang), authentication, and security.</subtitle><author><name>Dan Janowski</name></author><entry><title type="html">Explaining LiveView with diagrams by Claude.ai</title><link href="https://danj3.github.io/2025/04/liveview-claude-mermaid/" rel="alternate" type="text/html" title="Explaining LiveView with diagrams by Claude.ai" /><published>2025-04-28T00:00:00-04:00</published><updated>2025-04-28T00:00:00-04:00</updated><id>https://danj3.github.io/2025/04/liveview-claude-mermaid</id><content type="html" xml:base="https://danj3.github.io/2025/04/liveview-claude-mermaid/">&lt;p&gt;In considering AI use cases and capabilities, I set &lt;a href=&quot;https://claude.ai&quot;&gt;Claude.ai&lt;/a&gt; on the task of describing the life cycle and events for PhoenixLiveView LiveComponent. The prompt, including my typo:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Draw a collection of sequence diagrams to explain event handling and callbacks for  PhoenixLiveView LiveComponents work (documentation is https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html#callbacks) written as mermaid code (reference documentation is https://mermaid.js.org/syntax/sequenceDiagram.html).&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The high level output was:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;I’ll create a collection of sequence diagrams that explain event handling and callbacks for Phoenix LiveView LiveComponents using Mermaid. These diagrams will help visualize the lifecycle and interactions of LiveComponents.&lt;/p&gt;
+
+  &lt;p&gt;Phoenix LiveComponent Sequence DiagramsDiagram &lt;/p&gt;
+
+  &lt;p&gt;Let me create a few more diagrams to cover different aspects of LiveComponent interactions:&lt;/p&gt;
+  &lt;ol&gt;
+    &lt;li&gt;LiveComponent Event HandlingDiagram &lt;/li&gt;
+    &lt;li&gt;LiveComponent Message HandlingDiagram &lt;/li&gt;
+    &lt;li&gt;LiveComponent Parent-Child CommunicationDiagram &lt;/li&gt;
+    &lt;li&gt;Stateful LiveComponent LifecycleDiagram &lt;/li&gt;
+  &lt;/ol&gt;
+
+  &lt;p&gt;These sequence diagrams illustrate the key interactions and lifecycle of Phoenix LiveComponents:&lt;/p&gt;
+
+  &lt;p&gt;Initial Mount: Shows how a LiveComponent is initialized and rendered during the first page load.&lt;/p&gt;
+
+  &lt;p&gt;Event Handling: Demonstrates how events are processed, differentiating between events targeted directly at the component versus those handled by the parent LiveView.&lt;/p&gt;
+
+  &lt;p&gt;Message Handling: Illustrates how send_update works to trigger out-of-band updates to components.&lt;/p&gt;
+
+  &lt;p&gt;Parent-Child Communication: Shows the two primary ways parent LiveViews communicate with child LiveComponents.&lt;/p&gt;
+
+  &lt;p&gt;Stateful Component Lifecycle: Details how stateful LiveComponents maintain their state across multiple interactions.&lt;/p&gt;
+
+  &lt;p&gt;Each diagram visualizes different aspects of the LiveComponent lifecycle, helping to clarify how these components interact with LiveViews and the browser. Would you like me to explain any specific aspect of these diagrams in more detail?&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The diagrams are below. I’ve looked at them for a few minutes and compared them with the documentation. They seem correct, although I may have missed an error. If you find a mistake or something significantly missing, please let me know (&lt;a href=&quot;https://www.linkedin.com/in/dan-janowski&quot;&gt;&lt;svg class=&quot;svg-icon&quot;&gt;&lt;use xlink:href=&quot;/assets/minima-social-icons.svg#linkedin&quot;&gt;&lt;/use&gt;&lt;/svg&gt; &lt;span class=&quot;username&quot;&gt;dan-janowski&lt;/span&gt;&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;These strike me as pretty well formed and useful diagrams. It would have taken me more than an hour, probably a few, to decide which diagrams to make and the contents. Writing this article has already taken significantly longer to write than Claude took to generate the diagrams. Though I did write updated mermaid and link generating plugins for Liquid to make this post.&lt;/p&gt;
+
+&lt;h2 id=&quot;livecomponent-lifecycle---initial-mount&quot;&gt;LiveComponent Lifecycle - Initial Mount&lt;/h2&gt;
+
+&lt;script type=&quot;module&quot; src=&quot;https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs&quot;&gt;&lt;/script&gt;
+&lt;div class=&quot;mermaid&quot;&gt;
+sequenceDiagram
+    title LiveComponent Lifecycle - Initial Mount
+    
+    Browser-&amp;gt;&amp;gt;LiveView: Initial Request
+    LiveView-&amp;gt;&amp;gt;LiveComponent: mount/1
+    Note over LiveComponent: Initialize state
+    LiveComponent-&amp;gt;&amp;gt;LiveView: Return socket
+    LiveView-&amp;gt;&amp;gt;LiveComponent: update/2
+    Note over LiveComponent: Process assigns
+    LiveComponent-&amp;gt;&amp;gt;LiveView: Return updated socket
+    LiveView-&amp;gt;&amp;gt;LiveComponent: render/1
+    Note over LiveComponent: Generate HTML
+    LiveComponent-&amp;gt;&amp;gt;LiveView: Return rendered HTML
+    LiveView-&amp;gt;&amp;gt;Browser: Send HTML response
+&lt;/div&gt;
+
+&lt;h2 id=&quot;livecomponent-event-handling&quot;&gt;LiveComponent Event Handling&lt;/h2&gt;
+
+&lt;script type=&quot;module&quot; src=&quot;https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs&quot;&gt;&lt;/script&gt;
+&lt;div class=&quot;mermaid&quot;&gt;
+sequenceDiagram
+    title LiveComponent Event Handling
+    
+    Browser-&amp;gt;&amp;gt;LiveView: User Event (phx-click, etc.)
+    Note over LiveView: Event contains phx-target
+    
+    alt Event Targeted at LiveComponent
+        LiveView-&amp;gt;&amp;gt;LiveComponent: handle_event/3
+        Note over LiveComponent: Process event
+        LiveComponent-&amp;gt;&amp;gt;LiveComponent: Update internal state
+        LiveComponent-&amp;gt;&amp;gt;LiveView: Return updated socket
+        LiveView-&amp;gt;&amp;gt;LiveComponent: render/1
+        LiveComponent-&amp;gt;&amp;gt;LiveView: Return rendered HTML
+        LiveView-&amp;gt;&amp;gt;Browser: Send HTML diff
+    else Event Targeted at Parent LiveView
+        LiveView-&amp;gt;&amp;gt;LiveView: handle_event/3
+        Note over LiveView: Process event
+        LiveView-&amp;gt;&amp;gt;LiveView: Update state
+        LiveView-&amp;gt;&amp;gt;LiveComponent: update/2 (if state affects component)
+        LiveComponent-&amp;gt;&amp;gt;LiveView: Return updated socket
+        LiveView-&amp;gt;&amp;gt;LiveComponent: render/1
+        LiveComponent-&amp;gt;&amp;gt;LiveView: Return rendered HTML
+        LiveView-&amp;gt;&amp;gt;Browser: Send HTML diff
+    end
+&lt;/div&gt;
+
+&lt;h2 id=&quot;livecomponent-message-handling-send_update&quot;&gt;LiveComponent Message Handling (send_update)&lt;/h2&gt;
+&lt;script type=&quot;module&quot; src=&quot;https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs&quot;&gt;&lt;/script&gt;
+&lt;div class=&quot;mermaid&quot;&gt;
+sequenceDiagram
+    title LiveComponent Message Handling (send_update)
+    
+    participant Process as &quot;External Process&quot;
+    participant LVReg as &quot;LiveView Registry&quot;
+    participant LiveView
+    participant LiveComponent
+    
+    Process-&amp;gt;&amp;gt;LVReg: send_update(Component, id: id, ...)
+    LVReg-&amp;gt;&amp;gt;LiveView: Find LiveView containing component
+    LiveView-&amp;gt;&amp;gt;LiveComponent: update/2
+    Note over LiveComponent: Process updated assigns
+    LiveComponent-&amp;gt;&amp;gt;LiveView: Return updated socket
+    LiveView-&amp;gt;&amp;gt;LiveComponent: render/1
+    LiveComponent-&amp;gt;&amp;gt;LiveView: Return rendered HTML
+    LiveView-&amp;gt;&amp;gt;Browser: Send HTML diff
+&lt;/div&gt;
+
+&lt;h2 id=&quot;livecomponent-parent-child-communication&quot;&gt;LiveComponent Parent-Child Communication&lt;/h2&gt;
+&lt;script type=&quot;module&quot; src=&quot;https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs&quot;&gt;&lt;/script&gt;
+&lt;div class=&quot;mermaid&quot;&gt;
+sequenceDiagram
+    title LiveComponent Parent-Child Communication
+    
+    Browser-&amp;gt;&amp;gt;LiveView: User Event
+    LiveView-&amp;gt;&amp;gt;LiveView: handle_event/3
+    Note over LiveView: Update state
+    
+    alt Using assign
+        LiveView-&amp;gt;&amp;gt;LiveComponent: update/2 with new assigns
+        LiveComponent-&amp;gt;&amp;gt;LiveView: Return updated socket
+    else Using send_update
+        LiveView-&amp;gt;&amp;gt;LiveComponent: Phoenix.LiveView.send_update
+        Note over LiveComponent: Component receives out-of-band update
+        LiveComponent-&amp;gt;&amp;gt;LiveView: Trigger re-render
+    end
+    
+    LiveView-&amp;gt;&amp;gt;LiveComponent: render/1
+    LiveComponent-&amp;gt;&amp;gt;LiveView: Return rendered HTML
+    LiveView-&amp;gt;&amp;gt;Browser: Send HTML diff
+&lt;/div&gt;
+
+&lt;h2 id=&quot;stateful-livecomponent-lifecycle&quot;&gt;Stateful LiveComponent Lifecycle&lt;/h2&gt;
+
+&lt;script type=&quot;module&quot; src=&quot;https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs&quot;&gt;&lt;/script&gt;
+&lt;div class=&quot;mermaid&quot;&gt;
+sequenceDiagram
+    title Stateful LiveComponent Lifecycle
+    
+    Browser-&amp;gt;&amp;gt;LiveView: Initial Request
+    LiveView-&amp;gt;&amp;gt;LiveComponent: mount/1
+    Note over LiveComponent: Initialize state in socket
+    LiveComponent-&amp;gt;&amp;gt;LiveView: Return socket with state
+    
+    Browser-&amp;gt;&amp;gt;LiveView: User Event (phx-target=component)
+    LiveView-&amp;gt;&amp;gt;LiveComponent: handle_event/3
+    Note over LiveComponent: Process event with socket state
+    LiveComponent-&amp;gt;&amp;gt;LiveComponent: Update socket state
+    LiveComponent-&amp;gt;&amp;gt;LiveView: Return updated socket
+    LiveView-&amp;gt;&amp;gt;Browser: Send HTML diff
+    
+    Note over LiveComponent: State persists between renders
+    
+    Browser-&amp;gt;&amp;gt;LiveView: Another User Event
+    LiveView-&amp;gt;&amp;gt;LiveComponent: handle_event/3
+    Note over LiveComponent: Access previous state from socket
+    LiveComponent-&amp;gt;&amp;gt;LiveView: Return updated socket
+    LiveView-&amp;gt;&amp;gt;Browser: Send HTML diff
+&lt;/div&gt;</content><author><name>Dan Janowski</name></author><category term="elixir" /><category term="mermaid" /><category term="au" /><category term="claude.ai" /><summary type="html">In considering AI use cases and capabilities, I set Claude.ai on the task of describing the life cycle and events for PhoenixLiveView LiveComponent. The prompt, including my typo:</summary></entry><entry><title type="html">Coding with Claude.ai, a short journey</title><link href="https://danj3.github.io/2025/04/claude-example/" rel="alternate" type="text/html" title="Coding with Claude.ai, a short journey" /><published>2025-04-15T00:00:00-04:00</published><updated>2025-04-15T00:00:00-04:00</updated><id>https://danj3.github.io/2025/04/claude-example</id><content type="html" xml:base="https://danj3.github.io/2025/04/claude-example/">&lt;p&gt;Understanding the uses, limits and pitfalls of AI as your “coding buddy” requires some work and investigation. I’ve chosen to investigate with &lt;a href=&quot;https://claude.ai&quot;&gt;Claude.ai&lt;/a&gt; and compare coding solutions in &lt;a href=&quot;https://elixir-lang.org&quot;&gt;Elixir&lt;/a&gt;, &lt;a href=&quot;https://www.erlang.org&quot;&gt;Erlang&lt;/a&gt; and &lt;a href=&quot;https://en.wikipedia.org/wiki/ECMAScript&quot;&gt;Javascript&lt;/a&gt;. My goal here is to evaluate idiomatic style and forecast how the approaches may hold up. Let’s start with the claude.ai chat interface, nothing fancy like cursor.&lt;/p&gt;
 
 &lt;p&gt;The task I’ve chosen is to transform a list of number digits with a
 valid range of zero to nine into their english words.  My approach is
@@ -1149,41 +1310,4 @@ foobar
 &lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
 &lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
 &lt;p&gt;I&apos;m abandoning this for now.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;</content><author><name>Dan</name></author><category term="linux" /><category term="nixos" /><category term="linux" /><summary type="html">A stab at installing NixOS over a network</summary></entry><entry><title type="html">Signed OpenSSH keys</title><link href="https://danj3.github.io/2021/03/signed-openssh-keys/" rel="alternate" type="text/html" title="Signed OpenSSH keys" /><published>2021-03-26T11:47:23-04:00</published><updated>2021-03-26T11:47:23-04:00</updated><id>https://danj3.github.io/2021/03/signed-openssh-keys</id><content type="html" xml:base="https://danj3.github.io/2021/03/signed-openssh-keys/">&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;OpenSSH supports the signing of public keys by a certificate authority. This feature is the gateway to a powerful set of access controls limiting access by users, time, principals and hosts. Articles can be found  on the topic, here are a few:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:more --&gt;&lt;br /&gt;
-&lt;!--more--&gt;&lt;br /&gt;
-&lt;!-- /wp:more --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Facebook engineering wrote in 2016 about their approach and what it enables: &lt;a href=&quot;https://engineering.fb.com/2016/09/12/security/scalable-and-secure-access-with-ssh/&quot;&gt;Scalable and secure access with SSH&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Hosaka wrote about it in 2020 and makes reference to the above FB post in the article &lt;a href=&quot;https://hosakacorp.net/p/ssh-pki.html&quot;&gt;Creating a PKI for OpenSSH&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;The key entry point is in the &lt;code&gt;ssh-keygen&lt;/code&gt; man page:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;CERT&lt;/strong&gt;&lt;strong&gt;IFICATES&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;     &lt;strong&gt;ssh-keygen&lt;/strong&gt; supports signing of keys to produce certificates that may be used for user or host authentication.  Certificates consist of a public key, some identity information, zero or more principal (user or host) names and a set of options that are signed by a Certification Authority (CA) key.  Clients or servers may then trust only the CA key and verify its signature on a certificate rather than trusting many user/host keys.  Note that OpenSSH certificates are a different, and much simpler, format to the X.509 certificates used in ssl(8).&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Some points of interest:&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:list --&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Users do not need to pre-seed .ssh/authorized_keys if their pub key is signed by a trusted CA&lt;/li&gt;
-&lt;li&gt;Keys can be revoked. Although the mechanics of this are left to the SA&apos;s devices&lt;/li&gt;
-&lt;li&gt;A signed key can be limited in usable scope to specific set of hosts and specific sets of destination users&lt;/li&gt;
-&lt;li&gt;A signed key has a specific usable duration, i.e. it expires. This alone adds a great deal of security and requires interaction with the CA for issuance/renewal creating a point of control.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;!-- /wp:list --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;Some details on how to do this are left out. How to create a secure issuance mechanism for a CA to do its actual work. The FB post alludes to an process that is invoked automatically for a user when the log in to a bastion host, but leaves the details of that out. The key-revocation mechanism is probably dependent on some kind of cron mechanism. How to manage (what gets issued) the who has access to what is out of scope and is likely dependent upon LDAP or other identity/authentication system of control.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;&lt;!-- wp:paragraph --&gt;&lt;/p&gt;
-&lt;p&gt;These are great starting points on this topic and worth considering if not for the possibilities it offers if not for how to solve the few implementation issues to make it really work.&lt;/p&gt;
-&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;</content><author><name>Dan</name></author><category term="System Admin" /><category term="Cryptography" /><category term="openssl" /><category term="ssh" /><summary type="html">Background and references on signed ssh keys</summary></entry></feed>
+&lt;p&gt;&lt;!-- /wp:paragraph --&gt;&lt;/p&gt;</content><author><name>Dan</name></author><category term="linux" /><category term="nixos" /><category term="linux" /><summary type="html">A stab at installing NixOS over a network</summary></entry></feed>
